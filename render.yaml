@@ -14,3 +14,11 @@ services:
         value: --max-old-space-size=384
       - key: NEXT_TELEMETRY_DISABLED
         value: "1"
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_COOKIE_NAME
+        value: hotellite_token
+      - key: FRONTEND_URL
+        sync: false

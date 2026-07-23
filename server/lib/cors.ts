@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const DEFAULT_ORIGINS = ["http://localhost:5173", "https://hotelite.netlify.app"];
+const DEFAULT_ORIGINS = ["http://localhost:5173"];
 
 function normalizeOrigin(value: string) {
   try {
