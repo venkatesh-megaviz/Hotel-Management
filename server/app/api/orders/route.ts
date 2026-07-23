@@ -1,0 +1,95 @@
+import { NextResponse } from "next/server";
+import { connectToDatabase } from "@/lib/mongodb";
+import { getAuthContext, unauthorized } from "@/lib/auth-context";
+import { withCors, corsPreflight } from "@/lib/cors";
+import { orderSchema } from "@/lib/validation";
+import Order from "@/models/Order";
+import { serializeOrder } from "@/lib/serialize-resources";
+import { notify } from "@/lib/notify";
+
+export async function OPTIONS(request: Request) {
+  return corsPreflight(request);
+}
+
+export async function GET(request: Request) {
+  const auth = getAuthContext(request);
+  if (!auth) return unauthorized(request);
+
+  await connectToDatabase();
+
+  const { searchParams } = new URL(request.url);
+  const status = searchParams.get("status");
+
+  const query: Record<string, unknown> = { restaurant: auth.restaurantId };
+  if (status && status !== "All") query.status = status;
+
+  const orders = await Order.find(query).sort({ createdAt: -1 });
+
+  return withCors(request, NextResponse.json({ orders: orders.map(serializeOrder) }));
+}
+
+export async function POST(request: Request) {
+  const auth = getAuthContext(request);
+  if (!auth) return unauthorized(request);
+
+  try {
+    const body = await request.json();
+    const parsed = orderSchema.safeParse(body);
+    if (!parsed.success) {
+      return withCors(request, NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 }));
+    }
+
+    const data = parsed.data;
+    await connectToDatabase();
+
+    const subtotal = data.items.reduce((sum, line) => sum + line.price * line.qty, 0);
+    const gstAmount = data.items.reduce((sum, line) => sum + (line.price * line.qty * line.gst) / 100, 0);
+    const total = subtotal + gstAmount;
+
+    const latest = await Order.findOne({ restaurant: auth.restaurantId }).sort({ billNo: -1 });
+    const billNo = latest ? latest.billNo + 1 : 1001;
+
+    const customCreatedAt = data.createdAt ? new Date(data.createdAt) : undefined;
+
+    const [order] = await Order.create(
+      [
+        {
+          restaurant: auth.restaurantId,
+          billNo,
+          tableOrNo: data.tableOrNo,
+          customerName: data.customerName || "Walk-in",
+          items: data.items.map((line) => ({
+            menuItem: line.menuItemId,
+            name: line.name,
+            price: line.price,
+            gst: line.gst,
+            qty: line.qty,
+          })),
+          subtotal,
+          gstAmount,
+          total,
+          mode: data.mode,
+          status: data.status,
+          notes: data.notes,
+          ...(customCreatedAt && !isNaN(customCreatedAt.getTime()) ? { createdAt: customCreatedAt } : {}),
+        },
+      ],
+      customCreatedAt ? { timestamps: false } : undefined,
+    );
+
+    if (order.status === "Pending") {
+      await notify({
+        restaurantId: auth.restaurantId,
+        title: `Payment Pending: #${order.billNo}`,
+        message: `Bill #${order.billNo} for ${order.tableOrNo || order.customerName} (₹${order.total.toFixed(0)}) is awaiting payment.`,
+        category: "Payments",
+        severity: "warning",
+      });
+    }
+
+    return withCors(request, NextResponse.json({ order: serializeOrder(order) }, { status: 201 }));
+  } catch (err) {
+    console.error("Create order error:", err);
+    return withCors(request, NextResponse.json({ error: "Something went wrong" }, { status: 500 }));
+  }
+}

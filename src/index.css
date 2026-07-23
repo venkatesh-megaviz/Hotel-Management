@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-500: #3b5bdb;
+  --color-brand-600: #2f5ce0;
+  --color-brand-700: #2547b3;
+
+  --color-surface: #f5f6fa;
+  --color-success-50: #ecfdf5;
+  --color-success-600: #16a34a;
+  --color-warning-50: #fff7ed;
+  --color-warning-600: #ea580c;
+  --color-danger-50: #fef2f2;
+  --color-danger-600: #dc2626;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-surface text-slate-800 antialiased;
+    font-family: var(--font-sans);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl bg-white shadow-sm ring-1 ring-slate-100;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+}
