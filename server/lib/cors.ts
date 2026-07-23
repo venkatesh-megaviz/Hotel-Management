@@ -19,14 +19,25 @@ function allowedOrigins() {
 export function corsHeaders(origin: string | null) {
   const normalizedOrigin = origin ? normalizeOrigin(origin) : null;
   const allowed = allowedOrigins();
-  const allowOrigin = normalizedOrigin && allowed.includes(normalizedOrigin) ? normalizedOrigin : allowed[0];
+  const allowOrigin =
+    normalizedOrigin && allowed.includes(normalizedOrigin)
+      ? normalizedOrigin
+      : normalizedOrigin && process.env.NODE_ENV !== "production"
+        ? normalizedOrigin
+        : allowed.find((entry) => entry.startsWith("https://")) ?? allowed[0];
 
-  return {
-    "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Credentials": "true",
+  const headers: Record<string, string> = {
     "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    Vary: "Origin",
   };
+
+  if (allowOrigin) {
+    headers["Access-Control-Allow-Origin"] = allowOrigin;
+    headers["Access-Control-Allow-Credentials"] = "true";
+  }
+
+  return headers;
 }
 
 export function withCors(request: Request, response: NextResponse) {

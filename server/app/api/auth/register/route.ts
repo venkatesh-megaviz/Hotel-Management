@@ -6,6 +6,7 @@ import Restaurant, { type RestaurantDoc } from "@/models/Restaurant";
 import { registerSchema } from "@/lib/validation";
 import { signToken, JWT_COOKIE_NAME } from "@/lib/jwt";
 import { withCors, corsPreflight } from "@/lib/cors";
+import { authCookieOptions } from "@/lib/auth-cookie";
 import { serializeUser, serializeRestaurant } from "@/lib/serialize";
 
 export async function OPTIONS(request: Request) {
@@ -65,13 +66,7 @@ export async function POST(request: Request) {
       restaurant: serializeRestaurant(restaurant),
     });
 
-    response.cookies.set(JWT_COOKIE_NAME, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 30 * 24 * 60 * 60,
-    });
+    response.cookies.set(JWT_COOKIE_NAME, token, authCookieOptions(30 * 24 * 60 * 60));
 
     return withCors(request, response);
   } catch (err) {
