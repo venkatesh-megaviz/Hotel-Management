@@ -1,9 +1,26 @@
 import { NextResponse } from "next/server";
 
-const ALLOWED_ORIGIN = process.env.FRONTEND_URL || "http://localhost:5173";
+const DEFAULT_ORIGINS = ["http://localhost:5173"];
+
+function normalizeOrigin(value: string) {
+  try {
+    const url = new URL(value.trim());
+    return `${url.protocol}//${url.host}`;
+  } catch {
+    return value.trim().replace(/\/+$/, "");
+  }
+}
+
+function allowedOrigins() {
+  const fromEnv = process.env.FRONTEND_URL?.split(",").map(normalizeOrigin).filter(Boolean) ?? [];
+  return [...new Set([...fromEnv, ...DEFAULT_ORIGINS])];
+}
 
 export function corsHeaders(origin: string | null) {
-  const allowOrigin = origin === ALLOWED_ORIGIN ? origin : ALLOWED_ORIGIN;
+  const normalizedOrigin = origin ? normalizeOrigin(origin) : null;
+  const allowed = allowedOrigins();
+  const allowOrigin = normalizedOrigin && allowed.includes(normalizedOrigin) ? normalizedOrigin : allowed[0];
+
   return {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Credentials": "true",
