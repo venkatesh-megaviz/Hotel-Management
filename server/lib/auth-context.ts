@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { verifyToken, JWT_COOKIE_NAME } from "@/lib/jwt";
 import { withCors } from "@/lib/cors";
+import { jsonResponse } from "@/lib/response";
 
 export function getAuthContext(request: Request) {
   const cookieHeader = request.headers.get("cookie") ?? "";
@@ -19,5 +19,5 @@ export function getAuthContext(request: Request) {
 }
 
 export function unauthorized(request: Request) {
-  return withCors(request, NextResponse.json({ error: "Not authenticated" }, { status: 401 }));
+  return withCors(request, jsonResponse({ error: "Not authenticated" }, 401));
 }

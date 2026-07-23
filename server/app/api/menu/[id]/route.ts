@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
@@ -19,19 +19,19 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const body = await request.json();
     const parsed = menuItemUpdateSchema.safeParse(body);
     if (!parsed.success) {
-      return withCors(request, NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 }));
+      return withCors(request, jsonResponse({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400));
     }
 
     await connectToDatabase();
     const item = await MenuItem.findOneAndUpdate({ _id: id, restaurant: auth.restaurantId }, parsed.data, { new: true });
     if (!item) {
-      return withCors(request, NextResponse.json({ error: "Item not found" }, { status: 404 }));
+      return withCors(request, jsonResponse({ error: "Item not found" }, 404));
     }
 
-    return withCors(request, NextResponse.json({ item: serializeMenuItem(item) }));
+    return withCors(request, jsonResponse({ item: serializeMenuItem(item) }));
   } catch (err) {
     console.error("Update menu item error:", err);
-    return withCors(request, NextResponse.json({ error: "Something went wrong" }, { status: 500 }));
+    return withCors(request, jsonResponse({ error: "Something went wrong" }, 500));
   }
 }
 
@@ -43,5 +43,5 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   await connectToDatabase();
   await MenuItem.findOneAndDelete({ _id: id, restaurant: auth.restaurantId });
 
-  return withCors(request, NextResponse.json({ ok: true }));
+  return withCors(request, jsonResponse({ ok: true }));
 }

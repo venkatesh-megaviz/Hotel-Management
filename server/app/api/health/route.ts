@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import { withCors, corsPreflight } from "@/lib/cors";
 
 export async function OPTIONS(request: Request) {
@@ -6,5 +6,5 @@ export async function OPTIONS(request: Request) {
 }
 
 export async function GET(request: Request) {
-  return withCors(request, NextResponse.json({ ok: true }));
+  return withCors(request, jsonResponse({ ok: true }));
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   await connectToDatabase();
   const items = await MenuItem.find({ restaurant: auth.restaurantId }).sort({ createdAt: -1 });
 
-  return withCors(request, NextResponse.json({ items: items.map(serializeMenuItem) }));
+  return withCors(request, jsonResponse({ items: items.map(serializeMenuItem) }));
 }
 
 export async function POST(request: Request) {
@@ -28,15 +28,15 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = menuItemSchema.safeParse(body);
     if (!parsed.success) {
-      return withCors(request, NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 }));
+      return withCors(request, jsonResponse({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400));
     }
 
     await connectToDatabase();
     const item = await MenuItem.create({ ...parsed.data, restaurant: auth.restaurantId });
 
-    return withCors(request, NextResponse.json({ item: serializeMenuItem(item) }, { status: 201 }));
+    return withCors(request, jsonResponse({ item: serializeMenuItem(item) }, 201));
   } catch (err) {
     console.error("Create menu item error:", err);
-    return withCors(request, NextResponse.json({ error: "Something went wrong" }, { status: 500 }));
+    return withCors(request, jsonResponse({ error: "Something went wrong" }, 500));
   }
 }

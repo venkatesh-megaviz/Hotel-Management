@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
@@ -22,10 +22,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   );
 
   if (!notification) {
-    return withCors(request, NextResponse.json({ error: "Notification not found" }, { status: 404 }));
+    return withCors(request, jsonResponse({ error: "Notification not found" }, 404));
   }
 
-  return withCors(request, NextResponse.json({ notification: serializeNotification(notification) }));
+  return withCors(request, jsonResponse({ notification: serializeNotification(notification) }));
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -36,5 +36,5 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   await connectToDatabase();
   await Notification.findOneAndDelete({ _id: id, restaurant: auth.restaurantId });
 
-  return withCors(request, NextResponse.json({ ok: true }));
+  return withCors(request, jsonResponse({ ok: true }));
 }

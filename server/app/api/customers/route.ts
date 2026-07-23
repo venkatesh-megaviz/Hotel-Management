@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   await connectToDatabase();
   const customers = await Customer.find({ restaurant: auth.restaurantId }).sort({ createdAt: -1 });
 
-  return withCors(request, NextResponse.json({ customers: customers.map(serializeCustomer) }));
+  return withCors(request, jsonResponse({ customers: customers.map(serializeCustomer) }));
 }
 
 export async function POST(request: Request) {
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = customerSchema.safeParse(body);
     if (!parsed.success) {
-      return withCors(request, NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 }));
+      return withCors(request, jsonResponse({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400));
     }
 
     await connectToDatabase();
@@ -43,9 +43,9 @@ export async function POST(request: Request) {
       severity: "success",
     });
 
-    return withCors(request, NextResponse.json({ customer: serializeCustomer(customer) }, { status: 201 }));
+    return withCors(request, jsonResponse({ customer: serializeCustomer(customer) }, 201));
   } catch (err) {
     console.error("Create customer error:", err);
-    return withCors(request, NextResponse.json({ error: "Something went wrong" }, { status: 500 }));
+    return withCors(request, jsonResponse({ error: "Something went wrong" }, 500));
   }
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
@@ -20,10 +20,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const order = await Order.findOne({ _id: id, restaurant: auth.restaurantId });
 
   if (!order) {
-    return withCors(request, NextResponse.json({ error: "Order not found" }, { status: 404 }));
+    return withCors(request, jsonResponse({ error: "Order not found" }, 404));
   }
 
-  return withCors(request, NextResponse.json({ order: serializeOrder(order) }));
+  return withCors(request, jsonResponse({ order: serializeOrder(order) }));
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -35,7 +35,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const body = await request.json();
     const parsed = orderUpdateSchema.safeParse(body);
     if (!parsed.success) {
-      return withCors(request, NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 }));
+      return withCors(request, jsonResponse({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400));
     }
 
     await connectToDatabase();
@@ -46,7 +46,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     );
 
     if (!order) {
-      return withCors(request, NextResponse.json({ error: "Order not found" }, { status: 404 }));
+      return withCors(request, jsonResponse({ error: "Order not found" }, 404));
     }
 
     if (parsed.data.status === "Refunded") {
@@ -59,9 +59,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       });
     }
 
-    return withCors(request, NextResponse.json({ order: serializeOrder(order) }));
+    return withCors(request, jsonResponse({ order: serializeOrder(order) }));
   } catch (err) {
     console.error("Update order error:", err);
-    return withCors(request, NextResponse.json({ error: "Something went wrong" }, { status: 500 }));
+    return withCors(request, jsonResponse({ error: "Something went wrong" }, 500));
   }
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/mongodb";
 import User, { type UserDoc } from "@/models/User";
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return withCors(
         request,
-        NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 }),
+        jsonResponse({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400),
       );
     }
 
@@ -30,12 +30,12 @@ export async function POST(request: Request) {
 
     const user = (await User.findOne({ email })) as UserDoc | null;
     if (!user) {
-      return withCors(request, NextResponse.json({ error: "Invalid email or password" }, { status: 401 }));
+      return withCors(request, jsonResponse({ error: "Invalid email or password" }, 401));
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
-      return withCors(request, NextResponse.json({ error: "Invalid email or password" }, { status: 401 }));
+      return withCors(request, jsonResponse({ error: "Invalid email or password" }, 401));
     }
 
     const restaurant = (await Restaurant.findById(user.restaurant)) as RestaurantDoc | null;
@@ -45,16 +45,19 @@ export async function POST(request: Request) {
       restaurantId: restaurant?._id.toString() ?? "",
     });
 
-    const response = NextResponse.json({
-      user: serializeUser(user),
-      restaurant: restaurant ? serializeRestaurant(restaurant) : null,
-    });
-
-    response.cookies.set(JWT_COOKIE_NAME, token, authCookieOptions(30 * 24 * 60 * 60));
-
-    return withCors(request, response);
+    return withCors(
+      request,
+      jsonResponse(
+        {
+          user: serializeUser(user),
+          restaurant: restaurant ? serializeRestaurant(restaurant) : null,
+        },
+        200,
+        [{ name: JWT_COOKIE_NAME, value: token, options: authCookieOptions(30 * 24 * 60 * 60) }],
+      ),
+    );
   } catch (err) {
     console.error("Login error:", err);
-    return withCors(request, NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 }));
+    return withCors(request, jsonResponse({ error: "Something went wrong. Please try again." }, 500));
   }
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   await connectToDatabase();
   const entries = await StockEntry.find({ restaurant: auth.restaurantId }).sort({ createdAt: -1 }).limit(50);
 
-  return withCors(request, NextResponse.json({ entries: entries.map(serializeStockEntry) }));
+  return withCors(request, jsonResponse({ entries: entries.map(serializeStockEntry) }));
 }
 
 export async function POST(request: Request) {
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = stockEntrySchema.safeParse(body);
     if (!parsed.success) {
-      return withCors(request, NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 }));
+      return withCors(request, jsonResponse({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400));
     }
 
     const data = parsed.data;
@@ -55,9 +55,9 @@ export async function POST(request: Request) {
       });
     }
 
-    return withCors(request, NextResponse.json({ entry: serializeStockEntry(entry) }, { status: 201 }));
+    return withCors(request, jsonResponse({ entry: serializeStockEntry(entry) }, 201));
   } catch (err) {
     console.error("Create stock entry error:", err);
-    return withCors(request, NextResponse.json({ error: "Something went wrong" }, { status: 500 }));
+    return withCors(request, jsonResponse({ error: "Something went wrong" }, 500));
   }
 }

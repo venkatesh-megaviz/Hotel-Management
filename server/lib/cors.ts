@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { emptyResponse } from "@/lib/response";
 
 const DEFAULT_ORIGINS = ["http://localhost:5173"];
 
@@ -40,12 +40,17 @@ export function corsHeaders(origin: string | null) {
   return headers;
 }
 
-export function withCors(request: Request, response: NextResponse) {
+export function withCors(request: Request, response: Response): Response {
   const headers = corsHeaders(request.headers.get("origin"));
-  Object.entries(headers).forEach(([key, value]) => response.headers.set(key, value));
-  return response;
+  const newHeaders = new Headers(response.headers);
+  Object.entries(headers).forEach(([key, value]) => newHeaders.set(key, value));
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders,
+  });
 }
 
 export function corsPreflight(request: Request) {
-  return new NextResponse(null, { status: 204, headers: corsHeaders(request.headers.get("origin")) });
+  return emptyResponse(204, corsHeaders(request.headers.get("origin")));
 }

@@ -4,16 +4,14 @@ services:
     runtime: node
     plan: free
     rootDir: server
-    buildCommand: NODE_OPTIONS=--max-old-space-size=460 npm install && npm run build
+    buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: NODE_OPTIONS
-        value: --max-old-space-size=384
-      - key: NEXT_TELEMETRY_DISABLED
-        value: "1"
+        value: --max-old-space-size=460
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET

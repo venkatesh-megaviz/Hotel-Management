@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getAuthContext, unauthorized } from "@/lib/auth-context";
@@ -18,26 +18,26 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = changePasswordSchema.safeParse(body);
     if (!parsed.success) {
-      return withCors(request, NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 }));
+      return withCors(request, jsonResponse({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400));
     }
 
     await connectToDatabase();
     const user = (await User.findById(auth.userId)) as UserDoc | null;
     if (!user) {
-      return withCors(request, NextResponse.json({ error: "Not authenticated" }, { status: 401 }));
+      return withCors(request, jsonResponse({ error: "Not authenticated" }, 401));
     }
 
     const valid = await bcrypt.compare(parsed.data.currentPassword, user.passwordHash);
     if (!valid) {
-      return withCors(request, NextResponse.json({ error: "Current password is incorrect" }, { status: 401 }));
+      return withCors(request, jsonResponse({ error: "Current password is incorrect" }, 401));
     }
 
     const newPasswordHash = await bcrypt.hash(parsed.data.newPassword, 10);
     await User.findByIdAndUpdate(auth.userId, { passwordHash: newPasswordHash });
 
-    return withCors(request, NextResponse.json({ ok: true }));
+    return withCors(request, jsonResponse({ ok: true }));
   } catch (err) {
     console.error("Change password error:", err);
-    return withCors(request, NextResponse.json({ error: "Something went wrong" }, { status: 500 }));
+    return withCors(request, jsonResponse({ error: "Something went wrong" }, 500));
   }
 }

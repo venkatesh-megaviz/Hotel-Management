@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   await connectToDatabase();
   const notifications = await Notification.find({ restaurant: auth.restaurantId }).sort({ createdAt: -1 }).limit(50);
 
-  return withCors(request, NextResponse.json({ notifications: notifications.map(serializeNotification) }));
+  return withCors(request, jsonResponse({ notifications: notifications.map(serializeNotification) }));
 }
 
 export async function DELETE(request: Request) {
@@ -26,5 +26,5 @@ export async function DELETE(request: Request) {
   await connectToDatabase();
   await Notification.deleteMany({ restaurant: auth.restaurantId });
 
-  return withCors(request, NextResponse.json({ ok: true }));
+  return withCors(request, jsonResponse({ ok: true }));
 }

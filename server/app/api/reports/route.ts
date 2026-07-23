@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
 
   return withCors(
     request,
-    NextResponse.json({
+    jsonResponse({
       range,
       revenue,
       revenueChange,

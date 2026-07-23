@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
   const orders = await Order.find(query).sort({ createdAt: -1 });
 
-  return withCors(request, NextResponse.json({ orders: orders.map(serializeOrder) }));
+  return withCors(request, jsonResponse({ orders: orders.map(serializeOrder) }));
 }
 
 export async function POST(request: Request) {
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = orderSchema.safeParse(body);
     if (!parsed.success) {
-      return withCors(request, NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 }));
+      return withCors(request, jsonResponse({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400));
     }
 
     const data = parsed.data;
@@ -87,9 +87,9 @@ export async function POST(request: Request) {
       });
     }
 
-    return withCors(request, NextResponse.json({ order: serializeOrder(order) }, { status: 201 }));
+    return withCors(request, jsonResponse({ order: serializeOrder(order) }, 201));
   } catch (err) {
     console.error("Create order error:", err);
-    return withCors(request, NextResponse.json({ error: "Something went wrong" }, { status: 500 }));
+    return withCors(request, jsonResponse({ error: "Something went wrong" }, 500));
   }
 }

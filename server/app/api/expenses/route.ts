@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { jsonResponse } from "@/lib/response";
 import { connectToDatabase } from "@/lib/mongodb";
 import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
   const expenses = await Expense.find(query).sort({ createdAt: -1 });
 
-  return withCors(request, NextResponse.json({ expenses: expenses.map(serializeExpense) }));
+  return withCors(request, jsonResponse({ expenses: expenses.map(serializeExpense) }));
 }
 
 export async function POST(request: Request) {
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = expenseSchema.safeParse(body);
     if (!parsed.success) {
-      return withCors(request, NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 }));
+      return withCors(request, jsonResponse({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400));
     }
 
     await connectToDatabase();
@@ -55,9 +55,9 @@ export async function POST(request: Request) {
       customCreatedAt ? { timestamps: false } : undefined,
     );
 
-    return withCors(request, NextResponse.json({ expense: serializeExpense(expense) }, { status: 201 }));
+    return withCors(request, jsonResponse({ expense: serializeExpense(expense) }, 201));
   } catch (err) {
     console.error("Create expense error:", err);
-    return withCors(request, NextResponse.json({ error: "Something went wrong" }, { status: 500 }));
+    return withCors(request, jsonResponse({ error: "Something went wrong" }, 500));
   }
 }
