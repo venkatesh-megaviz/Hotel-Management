@@ -1,23 +1,38 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Paperclip, Trash2, Upload, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  Paperclip,
+  Trash2,
+  Upload,
+  X,
+  ChevronLeft,
+  CircleDollarSign,
+  ShoppingCart,
+  Calendar,
+  Pencil,
+} from "lucide-react";
 import clsx from "clsx";
-import PageHeader from "@/components/PageHeader";
-import StatCard from "@/components/StatCard";
 import { Toast, useToast } from "@/components/Toast";
-import { fetchExpenses, createExpense, deleteExpense, ApiError, type Expense, type ExpenseCategory } from "@/lib/api";
+import { fetchExpenses, createExpense, updateExpense, deleteExpense, ApiError, type Expense, type ExpenseCategory } from "@/lib/api";
 
 const categories: ExpenseCategory[] = ["Raw Materials", "Fuel", "Payroll", "Utilities", "Operations", "Maintenance", "Other"];
 const paymentModes = ["Cash", "UPI", "Card", "Online", "Bank Transfer"] as const;
 
 const categoryColors: Record<string, string> = {
-  "Raw Materials": "bg-brand-50 text-brand-600",
-  Fuel: "bg-warning-50 text-warning-600",
-  Payroll: "bg-success-50 text-success-600",
-  Utilities: "bg-danger-50 text-danger-600",
+  "Raw Materials": "bg-[#EFF6FF] text-[#155DFC]",
+  Fuel: "bg-[#FFF7ED] text-[#FE9A00]",
+  Payroll: "bg-[#F5F3FF] text-[#7C3AED]",
+  Utilities: "bg-[#ECFEFF] text-[#0891B2]",
   Operations: "bg-slate-100 text-slate-600",
-  Maintenance: "bg-warning-50 text-warning-600",
+  Maintenance: "bg-[#FFF7ED] text-[#FE9A00]",
   Other: "bg-slate-100 text-slate-600",
 };
+
+const KPI_CARDS = [
+  { key: "month", labelSuffix: "Total", icon: CircleDollarSign, color: "#DC2626", bg: "#FDF2F8" },
+  { key: "raw", label: "Raw Materials", icon: ShoppingCart, color: "#155DFC", bg: "#EFF6FF" },
+  { key: "bills", label: "Bills Attached", icon: Paperclip, color: "#009966", bg: "#ECFDF5" },
+  { key: "today", label: "Today", icon: Calendar, color: "#FE9A00", bg: "#FFF7ED" },
+] as const;
 
 function isToday(iso: string) {
   return new Date(iso).toDateString() === new Date().toDateString();
@@ -46,6 +61,7 @@ export default function Expenses() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("All");
   const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast, showToast } = useToast();
@@ -59,16 +75,22 @@ export default function Expenses() {
 
   useEffect(load, []);
 
+  const monthExpenses = useMemo(() => expenses.filter((e) => isThisMonth(e.createdAt)), [expenses]);
   const filtered = activeCategory === "All" ? expenses : expenses.filter((e) => e.category === activeCategory);
 
-  const monthTotal = useMemo(() => expenses.filter((e) => isThisMonth(e.createdAt)).reduce((s, e) => s + e.amount, 0), [expenses]);
-  const rawMaterialsTotal = useMemo(
-    () => expenses.filter((e) => e.category === "Raw Materials" && isThisMonth(e.createdAt)).reduce((s, e) => s + e.amount, 0),
-    [expenses],
-  );
-  const billsAttached = useMemo(() => expenses.filter((e) => e.hasBill && isThisMonth(e.createdAt)).length, [expenses]);
-  const todayTotal = useMemo(() => expenses.filter((e) => isToday(e.createdAt)).reduce((s, e) => s + e.amount, 0), [expenses]);
+  const monthTotal = monthExpenses.reduce((s, e) => s + e.amount, 0);
+  const rawMaterialsTotal = monthExpenses.filter((e) => e.category === "Raw Materials").reduce((s, e) => s + e.amount, 0);
+  const billsAttached = monthExpenses.filter((e) => e.hasBill).length;
+  const todayTotal = expenses.filter((e) => isToday(e.createdAt)).reduce((s, e) => s + e.amount, 0);
+  const todayEntries = expenses.filter((e) => isToday(e.createdAt)).length;
   const monthName = new Date().toLocaleDateString("en-US", { month: "long" });
+
+  const kpiValues: Record<(typeof KPI_CARDS)[number]["key"], { value: string; hint: string }> = {
+    month: { value: `₹${monthTotal.toLocaleString()}`, hint: `${monthExpenses.length} entries` },
+    raw: { value: `₹${rawMaterialsTotal.toLocaleString()}`, hint: "Largest category" },
+    bills: { value: `${billsAttached}`, hint: "Verified entries" },
+    today: { value: `₹${todayTotal.toLocaleString()}`, hint: `${todayEntries} entries` },
+  };
 
   function handleFile(file: File | undefined) {
     if (!file) return;
@@ -77,12 +99,26 @@ export default function Expenses() {
     reader.readAsDataURL(file);
   }
 
+  function startEdit(expense: Expense) {
+    setEditingId(expense.id);
+    setForm({
+      date: new Date(expense.createdAt).toISOString().slice(0, 10),
+      description: expense.description,
+      category: expense.category,
+      amount: String(expense.amount),
+      paymentMode: expense.paymentMode as (typeof paymentModes)[number],
+      billUrl: expense.billUrl ?? "",
+      billName: expense.hasBill ? "Bill attached" : "",
+    });
+    setView("add");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     try {
       const createdAt = form.date ? new Date(`${form.date}T12:00`).toISOString() : undefined;
-      const res = await createExpense({
+      const payload = {
         description: form.description,
         category: form.category,
         paymentMode: form.paymentMode,
@@ -90,10 +126,19 @@ export default function Expenses() {
         hasBill: !!form.billUrl,
         billUrl: form.billUrl,
         createdAt,
-      });
-      setExpenses((prev) => [res.expense, ...prev]);
-      showToast("success", "Expense saved successfully");
+      };
+
+      if (editingId) {
+        const res = await updateExpense(editingId, payload);
+        setExpenses((prev) => prev.map((e) => (e.id === editingId ? res.expense : e)));
+        showToast("success", "Expense updated successfully");
+      } else {
+        const res = await createExpense(payload);
+        setExpenses((prev) => [res.expense, ...prev]);
+        showToast("success", "Expense saved successfully");
+      }
       setForm(emptyForm);
+      setEditingId(null);
       setView("list");
     } catch (err) {
       showToast("error", err instanceof ApiError ? err.message : "Failed to save expense");
@@ -109,54 +154,66 @@ export default function Expenses() {
 
   if (view === "add") {
     return (
-      <div>
+      <div className="space-y-4">
         <Toast toast={toast} />
-        <PageHeader title="Add Daily Expense" subtitle="Record a new expense entry" />
+        <div className="inline-flex rounded-xl bg-slate-100 p-1">
+          <button
+            onClick={() => { setForm(emptyForm); setEditingId(null); setView("list"); }}
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700"
+          >
+            All Expenses
+          </button>
+          <button className="rounded-lg bg-[#155dfc] px-4 py-2 text-sm font-semibold text-white">{editingId ? "Edit Expense" : "Add Expense"}</button>
+        </div>
 
-        <div className="card max-w-2xl p-6">
+        <button
+          onClick={() => { setForm(emptyForm); setEditingId(null); setView("list"); }}
+          className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
+        >
+          <ChevronLeft size={16} />
+          Back to list
+        </button>
+
+        <div className="w-full max-w-2xl rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900">Add Daily Expense</h3>
+          <p className="mb-5 text-xs text-slate-400">Record an expense and optionally attach a bill image</p>
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Date</label>
+              <Field label="Date">
                 <input
                   type="date"
                   required
                   value={form.date}
                   onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                  className={inputClass}
                 />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Category</label>
+              </Field>
+              <Field label="Category">
                 <select
                   value={form.category}
                   onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as ExpenseCategory }))}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                  className={inputClass}
                 >
                   {categories.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
+                    <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
-              </div>
+              </Field>
             </div>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Description</label>
+            <Field label="Description">
               <input
                 type="text"
                 required
                 placeholder="e.g. Vegetables Purchase"
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                className={inputClass}
               />
-            </div>
+            </Field>
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Amount (₹)</label>
+              <Field label="Amount (₹)">
                 <input
                   type="number"
                   required
@@ -164,45 +221,31 @@ export default function Expenses() {
                   placeholder="0"
                   value={form.amount}
                   onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                  className={inputClass}
                 />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Payment Mode</label>
+              </Field>
+              <Field label="Payment Mode">
                 <select
                   value={form.paymentMode}
                   onChange={(e) => setForm((f) => ({ ...f, paymentMode: e.target.value as (typeof paymentModes)[number] }))}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                  className={inputClass}
                 >
                   {paymentModes.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
+                    <option key={m} value={m}>{m}</option>
                   ))}
                 </select>
-              </div>
+              </Field>
             </div>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Attach Bill (Optional)</label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,.pdf"
-                className="hidden"
-                onChange={(e) => handleFile(e.target.files?.[0])}
-              />
+            <Field label="Attach Bill (Optional)">
+              <input ref={fileInputRef} type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
               {form.billUrl ? (
                 <div className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3">
                   <span className="flex items-center gap-2 text-sm text-slate-600">
-                    <Paperclip size={14} className="text-brand-600" />
+                    <Paperclip size={14} className="text-[#009966]" />
                     {form.billName || "Bill attached"}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, billUrl: "", billName: "" }))}
-                    className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-danger-600"
-                  >
+                  <button type="button" onClick={() => setForm((f) => ({ ...f, billUrl: "", billName: "" }))} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100">
                     <X size={14} />
                   </button>
                 </div>
@@ -210,32 +253,20 @@ export default function Expenses() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-8 text-slate-400 hover:border-brand-300 hover:text-brand-500"
+                  className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-8 text-slate-400 hover:border-[#155DFC] hover:text-[#155DFC]"
                 >
                   <Upload size={22} />
-                  <span className="text-sm">Click to upload or drag &amp; drop</span>
-                  <span className="text-xs text-slate-300">PNG, JPG or PDF</span>
+                  <span className="text-sm">Click to upload bill image or PDF</span>
                 </button>
               )}
-            </div>
+            </Field>
 
             <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setForm(emptyForm);
-                  setView("list");
-                }}
-                className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-              >
+              <button type="button" onClick={() => { setForm(emptyForm); setEditingId(null); setView("list"); }} className="h-8 rounded-2xl border border-slate-200 px-5 text-sm font-medium text-slate-600 hover:bg-slate-50">
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-              >
-                {submitting ? "Saving…" : "Save Expense"}
+              <button type="submit" disabled={submitting} className="h-8 rounded-2xl bg-[#155dfc] px-5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
+                {submitting ? "Saving…" : editingId ? "Update Expense" : "Save Expense"}
               </button>
             </div>
           </form>
@@ -245,45 +276,52 @@ export default function Expenses() {
   }
 
   return (
-    <div>
+    <div className="space-y-5">
       <Toast toast={toast} />
-      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard data={{ label: `${monthName} Total`, value: `₹${monthTotal.toLocaleString()}`, icon: "CircleDollarSign", accent: "danger" }} />
-        <StatCard data={{ label: "Raw Materials", value: `₹${rawMaterialsTotal.toLocaleString()}`, icon: "Box", accent: "brand" }} />
-        <StatCard data={{ label: "Bills Attached", value: `${billsAttached}`, icon: "Paperclip", accent: "success" }} />
-        <StatCard data={{ label: "Today", value: `₹${todayTotal.toLocaleString()}`, icon: "Calendar", accent: "warning" }} />
+
+      <div className="inline-flex rounded-xl bg-slate-100 p-1">
+        <button className="rounded-lg bg-[#155dfc] px-4 py-2 text-sm font-semibold text-white">All Expenses</button>
+        <button onClick={() => { setForm(emptyForm); setEditingId(null); setView("add"); }} className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700">
+          Add Expense
+        </button>
       </div>
 
-      <PageHeader
-        title="Expense Management"
-        subtitle="Daily expenses with bill upload"
-        action={
-          <button
-            onClick={() => setView("add")}
-            className="flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
-          >
-            <Plus size={16} />
-            Add Expense
-          </button>
-        }
-      />
-
-      <div className="mb-4 flex flex-wrap gap-2">
-        {["All", ...categories].map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={clsx(
-              "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-              activeCategory === cat ? "bg-brand-600 text-white" : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50",
-            )}
-          >
-            {cat}
-          </button>
-        ))}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {KPI_CARDS.map((card) => {
+          const Icon = card.icon;
+          const label = card.key === "month" ? `${monthName} Total` : card.label;
+          const { value, hint } = kpiValues[card.key];
+          return (
+            <div key={card.key} className="rounded-2xl border border-slate-100 p-5 shadow-sm" style={{ backgroundColor: card.bg }}>
+              <div className="flex items-start justify-between">
+                <p className="text-sm font-medium text-slate-600">{label}</p>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/80" style={{ color: card.color }}>
+                  <Icon size={18} />
+                </div>
+              </div>
+              <p className="mt-3 text-2xl font-bold text-slate-900">{value}</p>
+              <p className="mt-1 text-xs text-slate-500">{hint}</p>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="card overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+        <div className="flex flex-wrap gap-2 border-b border-slate-100 px-5 py-4">
+          {["All", ...categories].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={clsx(
+                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                activeCategory === cat ? "bg-[#155dfc] text-white" : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50",
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
         {loading ? (
           <p className="p-8 text-center text-sm text-slate-400">Loading expenses…</p>
         ) : filtered.length === 0 ? (
@@ -296,48 +334,50 @@ export default function Expenses() {
                   <th className="px-5 py-3 font-medium">Date</th>
                   <th className="px-5 py-3 font-medium">Description</th>
                   <th className="px-5 py-3 font-medium">Category</th>
-                  <th className="px-5 py-3 font-medium">Payment Mode</th>
+                  <th className="px-5 py-3 font-medium">Mode</th>
                   <th className="px-5 py-3 font-medium">Bill</th>
-                  <th className="px-5 py-3 font-medium">Amount</th>
+                  <th className="px-5 py-3 font-medium text-right">Amount</th>
                   <th className="px-5 py-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-slate-100">
                 {filtered.map((e) => (
-                  <tr key={e.id}>
-                    <td className="px-5 py-3 text-slate-500">
+                  <tr key={e.id} className="hover:bg-slate-50/50">
+                    <td className="px-5 py-3.5 text-slate-500">
                       {new Date(e.createdAt).toLocaleDateString("en-US", { day: "numeric", month: "short" })}
                     </td>
-                    <td className="px-5 py-3 font-medium text-slate-800">{e.description}</td>
-                    <td className="px-5 py-3">
-                      <span className={clsx("badge", categoryColors[e.category])}>{e.category}</span>
+                    <td className="px-5 py-3.5 font-medium text-slate-800">{e.description}</td>
+                    <td className="px-5 py-3.5">
+                      <span className={clsx("rounded-full px-2.5 py-0.5 text-xs font-semibold", categoryColors[e.category])}>
+                        {e.category}
+                      </span>
                     </td>
-                    <td className="px-5 py-3 text-slate-500">{e.paymentMode}</td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3.5 text-slate-500">{e.paymentMode}</td>
+                    <td className="px-5 py-3.5">
                       {e.hasBill ? (
                         e.billUrl ? (
-                          <a
-                            href={e.billUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:underline"
-                          >
+                          <a href={e.billUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-[#009966] hover:underline">
                             <Paperclip size={12} /> Attached
                           </a>
                         ) : (
-                          <span className="flex items-center gap-1 text-xs font-medium text-brand-600">
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#009966]">
                             <Paperclip size={12} /> Attached
                           </span>
                         )
                       ) : (
-                        <span className="text-xs text-slate-300">No bill</span>
+                        <span className="text-slate-300">—</span>
                       )}
                     </td>
-                    <td className="px-5 py-3 font-medium text-slate-800">₹{e.amount.toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right">
-                      <button onClick={() => handleDelete(e.id)} className="rounded-lg p-1.5 text-slate-400 hover:bg-danger-50 hover:text-danger-600">
-                        <Trash2 size={14} />
-                      </button>
+                    <td className="px-5 py-3.5 text-right font-semibold text-slate-800">₹{e.amount.toLocaleString()}</td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => startEdit(e)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600" aria-label="Edit">
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => handleDelete(e.id)} className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label="Delete">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -346,6 +386,18 @@ export default function Expenses() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+const inputClass =
+  "w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#155DFC] focus:ring-2 focus:ring-[#EFF6FF]";
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-sm font-medium text-slate-700">{label}</label>
+      {children}
     </div>
   );
 }

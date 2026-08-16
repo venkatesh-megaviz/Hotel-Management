@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Minus,
   Plus,
@@ -16,7 +16,7 @@ import {
 import clsx from "clsx";
 import StatCard from "@/components/StatCard";
 import { useAuth } from "@/context/AuthContext";
-import { fetchMenuItems, fetchOrders, createOrder, type MenuItem, type Order, type OrderLine } from "@/lib/api";
+import { fetchMenuItems, fetchOrders, fetchTables, createOrder, type MenuItem, type Order, type OrderLine, type RestaurantTable } from "@/lib/api";
 
 function buildWhatsAppText(order: Order, restaurantName: string) {
   const lines = order.items.map((line) => `${line.name} ×${line.qty} - ₹${(line.price * line.qty).toFixed(0)}`).join("\n");
@@ -31,14 +31,17 @@ type View = "new" | "history";
 
 export default function Billing() {
   const { restaurant } = useAuth();
+  const [searchParams] = useSearchParams();
   const [view, setView] = useState<View>("new");
   const [menu, setMenu] = useState<MenuItem[]>([]);
+  const [tables, setTables] = useState<RestaurantTable[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState<"Cash" | "UPI" | "Card">("Cash");
+  const [tableId, setTableId] = useState("");
   const [tableOrNo, setTableOrNo] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [nextBillNo, setNextBillNo] = useState(1001);
@@ -47,8 +50,14 @@ export default function Billing() {
 
   useEffect(() => {
     fetchMenuItems().then((res) => setMenu(res.items.filter((i) => i.available)));
+    fetchTables().then((res) => setTables(res.tables));
     loadOrders();
-  }, []);
+
+    const preTable = searchParams.get("table");
+    const preNumber = searchParams.get("number");
+    if (preTable) setTableId(preTable);
+    if (preNumber) setTableOrNo(preNumber);
+  }, [searchParams]);
 
   function loadOrders() {
     setOrdersLoading(true);
@@ -85,32 +94,55 @@ export default function Billing() {
 
   function resetBill() {
     setCart([]);
+    setTableId("");
     setTableOrNo("");
     setCustomerName("");
     setMode("Cash");
   }
 
-  const subtotal = cart.reduce((sum, l) => sum + l.price * l.qty, 0);
-  const gst = cart.reduce((sum, l) => sum + (l.price * l.qty * l.gst) / 100, 0);
-  const total = subtotal + gst;
+  function handleTableSelect(id: string) {
+    setTableId(id);
+    const table = tables.find((t) => t.id === id);
+    if (table) setTableOrNo(table.number);
+  }
 
-  async function handleCollect() {
+  async function submitOrder(status: "Paid" | "Pending") {
     setSubmitting(true);
     try {
       const res = await createOrder({
+        tableId: tableId || undefined,
         tableOrNo,
         customerName: customerName || "Walk-in",
         items: cart.map(({ menuItemId, name, price, gst, qty }) => ({ menuItemId, name, price, gst, qty })),
         mode,
-        status: "Paid",
+        status,
+        orderType: "Dine-in",
+        kitchenStatus: "New",
       });
-      setPaidOrder(res.order);
+      if (status === "Paid") {
+        setPaidOrder(res.order);
+      }
       setNextBillNo((n) => n + 1);
       loadOrders();
+      if (status === "Pending") {
+        resetBill();
+      }
     } finally {
       setSubmitting(false);
     }
   }
+
+  async function handleCollect() {
+    await submitOrder("Paid");
+  }
+
+  async function handleSavePending() {
+    await submitOrder("Pending");
+  }
+
+  const subtotal = cart.reduce((sum, l) => sum + l.price * l.qty, 0);
+  const gst = cart.reduce((sum, l) => sum + (l.price * l.qty * l.gst) / 100, 0);
+  const total = subtotal + gst;
 
   function handleNewBillFromModal() {
     setPaidOrder(null);
@@ -216,13 +248,18 @@ export default function Billing() {
             </div>
 
             <div className="grid grid-cols-2 gap-2 p-4">
-              <input
-                type="text"
-                placeholder="Table / No."
-                value={tableOrNo}
-                onChange={(e) => setTableOrNo(e.target.value)}
+              <select
+                value={tableId}
+                onChange={(e) => handleTableSelect(e.target.value)}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-              />
+              >
+                <option value="">Table / No.</option>
+                {tables.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.number} ({t.status})
+                  </option>
+                ))}
+              </select>
               <input
                 type="text"
                 placeholder="Customer name"
@@ -299,21 +336,30 @@ export default function Billing() {
                 </div>
               </div>
 
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex flex-col gap-2">
                 <button
                   onClick={handleCollect}
                   disabled={cart.length === 0 || submitting}
-                  className="flex-1 rounded-xl bg-success-600 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+                  className="w-full rounded-xl bg-success-600 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
                 >
                   {submitting ? "Collecting…" : `Collect ₹${total.toFixed(0)}`}
                 </button>
-                <button
-                  onClick={resetBill}
-                  title="Reset bill"
-                  className="flex items-center justify-center rounded-xl bg-slate-100 px-3 text-slate-500 hover:bg-slate-200"
-                >
-                  <RefreshCcw size={16} />
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSavePending}
+                    disabled={cart.length === 0 || submitting}
+                    className="flex-1 rounded-xl border border-brand-200 bg-brand-50 py-2.5 text-sm font-semibold text-brand-600 hover:bg-brand-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Save as Pending
+                  </button>
+                  <button
+                    onClick={resetBill}
+                    title="Reset bill"
+                    className="flex items-center justify-center rounded-xl bg-slate-100 px-3 text-slate-500 hover:bg-slate-200"
+                  >
+                    <RefreshCcw size={16} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

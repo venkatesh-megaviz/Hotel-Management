@@ -6,6 +6,7 @@ import { customerSchema } from "@/lib/validation";
 import Customer from "@/models/Customer";
 import { serializeCustomer } from "@/lib/serialize-resources";
 import { notify } from "@/lib/notify";
+import { seedDefaultCustomers } from "@/lib/seed-demo-data";
 
 export async function OPTIONS(request: Request) {
   return corsPreflight(request);
@@ -16,6 +17,7 @@ export async function GET(request: Request) {
   if (!auth) return unauthorized(request);
 
   await connectToDatabase();
+  await seedDefaultCustomers(auth.restaurantId);
   const customers = await Customer.find({ restaurant: auth.restaurantId }).sort({ createdAt: -1 });
 
   return withCors(request, jsonResponse({ customers: customers.map(serializeCustomer) }));

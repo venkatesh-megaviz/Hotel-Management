@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
-import { AlertTriangle, Info, CheckCircle2, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Info, CheckCircle2, Trash2, X, CheckCheck } from "lucide-react";
 import clsx from "clsx";
 import PageHeader from "@/components/PageHeader";
+import StatCard from "@/components/StatCard";
 import { Toast, useToast } from "@/components/Toast";
 import {
   fetchNotifications,
   markNotificationRead,
+  markAllNotificationsRead,
   dismissNotification,
   clearAllNotifications,
   type AppNotification,
@@ -29,9 +31,12 @@ function timeAgo(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { day: "numeric", month: "short" });
 }
 
+type Filter = "All" | "Payments" | "Customers";
+
 export default function Notifications() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<Filter>("All");
   const { toast, showToast } = useToast();
 
   function load() {
@@ -42,8 +47,12 @@ export default function Notifications() {
       .finally(() => setLoading(false));
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(load, []);
+
+  const filtered = filter === "All" ? notifications : notifications.filter((n) => n.category === filter);
+  const unread = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
+  const paymentCount = useMemo(() => notifications.filter((n) => n.category === "Payments").length, [notifications]);
+  const customerCount = useMemo(() => notifications.filter((n) => n.category === "Customers").length, [notifications]);
 
   async function handleRowClick(n: AppNotification) {
     if (n.read) return;
@@ -52,6 +61,16 @@ export default function Notifications() {
       await markNotificationRead(n.id);
     } catch {
       showToast("error", "Failed to mark notification as read");
+    }
+  }
+
+  async function handleMarkAllRead() {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await markAllNotificationsRead();
+    } catch {
+      showToast("error", "Failed to mark all as read");
+      load();
     }
   }
 
@@ -80,32 +99,60 @@ export default function Notifications() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <Toast toast={toast} />
       <PageHeader
         title="Notifications"
+        subtitle={`${unread} unread · ${notifications.length} total`}
         action={
           notifications.length > 0 && (
-            <button
-              onClick={handleClearAll}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-            >
-              <Trash2 size={15} />
-              Clear all
-            </button>
+            <div className="flex gap-2">
+              {unread > 0 && (
+                <button onClick={handleMarkAllRead} className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                  <CheckCheck size={15} />
+                  Mark all read
+                </button>
+              )}
+              <button onClick={handleClearAll} className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                <Trash2 size={15} />
+                Clear all
+              </button>
+            </div>
           )
         }
       />
 
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatCard data={{ label: "Unread", value: `${unread}`, helpText: "Needs attention", icon: "Bell", accent: "brand" }} />
+        <StatCard data={{ label: "Payment Alerts", value: `${paymentCount}`, helpText: "This session", icon: "CreditCard", accent: "warning" }} />
+        <StatCard data={{ label: "Customer Alerts", value: `${customerCount}`, helpText: "This session", icon: "Users", accent: "success" }} />
+        <StatCard data={{ label: "Total", value: `${notifications.length}`, helpText: "All notifications", icon: "Bell", accent: "danger" }} />
+      </div>
+
+      <div className="flex gap-2">
+        {(["All", "Payments", "Customers"] as const).map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={clsx(
+              "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
+              filter === f ? "bg-brand-600 text-white" : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50",
+            )}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <p className="py-10 text-center text-sm text-slate-400">Loading notifications…</p>
-      ) : notifications.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="card py-16 text-center">
           <p className="text-sm text-slate-400">You're all caught up. No notifications right now.</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {notifications.map((n) => {
+          {filtered.map((n) => {
             const config = severityConfig[n.severity];
             const Icon = config.icon;
             return (
@@ -120,7 +167,6 @@ export default function Notifications() {
                 <span className={clsx("flex h-9 w-9 shrink-0 items-center justify-center rounded-full", config.iconBg, config.iconColor)}>
                   <Icon size={16} />
                 </span>
-
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-semibold text-slate-900">{n.title}</p>
@@ -129,13 +175,9 @@ export default function Notifications() {
                   </div>
                   <p className="mt-1 text-sm text-slate-500">{n.message}</p>
                 </div>
-
                 <div className="flex shrink-0 items-center gap-3">
                   <span className="whitespace-nowrap text-xs text-slate-400">{timeAgo(n.createdAt)}</span>
-                  <span
-                    onClick={(e) => handleDismiss(e, n.id)}
-                    className="rounded-lg p-1 text-slate-300 hover:bg-slate-100 hover:text-slate-500"
-                  >
+                  <span onClick={(e) => handleDismiss(e, n.id)} className="rounded-lg p-1 text-slate-300 hover:bg-slate-100 hover:text-slate-500">
                     <X size={15} />
                   </span>
                 </div>

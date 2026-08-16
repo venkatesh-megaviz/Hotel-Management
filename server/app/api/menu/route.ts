@@ -5,6 +5,7 @@ import { withCors, corsPreflight } from "@/lib/cors";
 import { menuItemSchema } from "@/lib/validation";
 import MenuItem from "@/models/MenuItem";
 import { serializeMenuItem } from "@/lib/serialize-resources";
+import { seedDefaultMenuItems } from "@/lib/seed-demo-data";
 
 export async function OPTIONS(request: Request) {
   return corsPreflight(request);
@@ -15,6 +16,7 @@ export async function GET(request: Request) {
   if (!auth) return unauthorized(request);
 
   await connectToDatabase();
+  await seedDefaultMenuItems(auth.restaurantId);
   const items = await MenuItem.find({ restaurant: auth.restaurantId }).sort({ createdAt: -1 });
 
   return withCors(request, jsonResponse({ items: items.map(serializeMenuItem) }));

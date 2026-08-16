@@ -38,17 +38,58 @@ const orderLineInput = z.object({
 });
 
 export const orderSchema = z.object({
+  tableId: z.string().trim().optional(),
   tableOrNo: z.string().trim().optional().default(""),
   customerName: z.string().trim().optional().default("Walk-in"),
   items: z.array(orderLineInput).min(1, "Add at least one item"),
   mode: z.enum(["Cash", "UPI", "Card"]).default("Cash"),
   status: z.enum(["Paid", "Pending", "Refunded"]).default("Paid"),
+  kitchenStatus: z.enum(["New", "Preparing", "Ready", "Served"]).optional(),
+  orderType: z.enum(["Dine-in", "Takeaway", "Online", "Parcel"]).default("Dine-in"),
+  priority: z.coerce.boolean().default(false),
   notes: z.string().trim().optional().default(""),
   createdAt: z.string().trim().optional(),
 });
 
 export const orderUpdateSchema = z.object({
-  status: z.enum(["Paid", "Pending", "Refunded"]),
+  status: z.enum(["Paid", "Pending", "Refunded"]).optional(),
+  kitchenStatus: z.enum(["New", "Preparing", "Ready", "Served"]).optional(),
+  mode: z.enum(["Cash", "UPI", "Card"]).optional(),
+  channelStatus: z.string().trim().optional(),
+  deliveryAgentId: z.string().trim().optional(),
+  eta: z.coerce.number().optional(),
+});
+
+export const channelOrderCreateSchema = z.object({
+  tableId: z.string().trim().optional(),
+  tableOrNo: z.string().trim().optional(),
+  customerName: z.string().trim().optional(),
+  deliveryAddress: z.string().trim().optional(),
+  items: z.array(orderLineInput).min(1),
+  channel: z.enum(["QR", "Swiggy", "Zomato", "Website"]),
+  channelStatus: z.string().trim().optional(),
+});
+
+export const deliveryAgentSchema = z.object({
+  name: z.string().trim().min(1),
+  phone: z.string().trim().min(6),
+  status: z.enum(["Active", "Idle", "Off Duty"]).default("Active"),
+});
+
+export const deliveryAgentUpdateSchema = deliveryAgentSchema.partial();
+
+export const tableSchema = z.object({
+  number: z.string().trim().min(1, "Table number is required"),
+  seats: z.coerce.number().min(1, "Seats must be at least 1"),
+  area: z.enum(["Indoor", "Outdoor", "Private"]).default("Indoor"),
+});
+
+export const tableUpdateSchema = z.object({
+  status: z.enum(["Available", "Occupied", "Reserved", "Billing"]).optional(),
+  customerName: z.string().trim().optional(),
+  reservedAt: z.string().trim().optional(),
+  seats: z.coerce.number().min(1).optional(),
+  area: z.enum(["Indoor", "Outdoor", "Private"]).optional(),
 });
 
 export const stockEntrySchema = z.object({
@@ -57,6 +98,23 @@ export const stockEntrySchema = z.object({
   unit: z.string().trim().min(1, "Unit is required"),
   supplier: z.string().trim().optional().default(""),
   cost: z.coerce.number().min(0).default(0),
+});
+
+export const inventoryUpdateSchema = z.object({
+  name: z.string().trim().min(1).optional(),
+  unit: z.string().trim().min(1).optional(),
+  quantity: z.coerce.number().min(0).optional(),
+  reorderLevel: z.coerce.number().min(0).optional(),
+});
+
+export const accountingActionSchema = z.object({
+  action: z.enum(["fileGst", "toggleIntegration", "syncIntegration"]),
+  period: z.string().trim().optional(),
+  integrationId: z.enum(["tally", "quickbooks", "zoho", "bank"]).optional(),
+});
+
+export const subscriptionChangeSchema = z.object({
+  plan: z.enum(["Basic", "Standard", "Premium"]),
 });
 
 export const expenseSchema = z.object({
@@ -69,11 +127,49 @@ export const expenseSchema = z.object({
   createdAt: z.string().trim().optional(),
 });
 
+export const expenseUpdateSchema = expenseSchema.partial();
+
 export const customerSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   phone: z.string().trim().min(6, "Enter a valid phone number"),
+  email: z.string().trim().optional().default(""),
+  address: z.string().trim().optional().default(""),
+  notes: z.string().trim().optional().default(""),
   totalVisits: z.coerce.number().min(0).default(0),
   totalSpent: z.coerce.number().min(0).default(0),
+});
+
+export const customerUpdateSchema = customerSchema.partial();
+
+export const loyaltyRedeemSchema = z.object({
+  points: z.coerce.number().int().min(1, "Enter at least 1 point to redeem"),
+});
+
+const recipeIngredientSchema = z.object({
+  name: z.string().trim().min(1, "Ingredient name is required"),
+  qty: z.string().trim().min(1, "Quantity is required"),
+  cost: z.coerce.number().min(0, "Cost must be positive"),
+});
+
+export const recipeSchema = z.object({
+  name: z.string().trim().min(1, "Dish name is required"),
+  category: z.string().trim().min(1, "Category is required"),
+  salePrice: z.coerce.number().min(0, "Sale price must be positive"),
+  ingredients: z.array(recipeIngredientSchema).min(1, "Add at least one ingredient"),
+});
+
+export const recipeUpdateSchema = recipeSchema.partial();
+
+export const staffSchema = z.object({
+  name: z.string().trim().min(1, "Name is required"),
+  role: z.string().trim().min(1, "Role is required"),
+  phone: z.string().trim().optional().default(""),
+  shift: z.enum(["Morning", "Evening"]).default("Morning"),
+});
+
+export const staffUpdateSchema = z.object({
+  action: z.enum(["check-in", "check-out"]).optional(),
+  status: z.enum(["Present", "Late", "Absent", "Off Duty"]).optional(),
 });
 
 const optionalEmail = z.union([z.string().trim().email("Enter a valid email"), z.literal("")]);

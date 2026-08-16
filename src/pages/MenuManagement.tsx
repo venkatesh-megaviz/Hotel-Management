@@ -12,7 +12,9 @@ import {
   type MenuItemInput,
 } from "@/lib/api";
 
-const emptyForm: MenuItemInput = { name: "", category: "", price: 0, gst: 5, foodType: "Veg", available: true };
+const MENU_CATEGORIES = ["Starters", "Main Course", "Breads", "Biryani", "Beverages", "Desserts", "Accompaniments"];
+
+const emptyForm: MenuItemInput = { name: "", category: "Main Course", price: 0, gst: 5, foodType: "Veg", available: true };
 
 type View = "list" | "add";
 
@@ -34,7 +36,10 @@ export default function MenuManagement() {
 
   useEffect(load, []);
 
-  const categories = useMemo(() => ["All", ...Array.from(new Set(items.map((i) => i.category)))], [items]);
+  const categories = useMemo(
+    () => ["All", ...Array.from(new Set([...MENU_CATEGORIES, ...items.map((i) => i.category)]))],
+    [items],
+  );
 
   const filtered = items.filter(
     (i) =>
@@ -93,12 +98,20 @@ export default function MenuManagement() {
             <Field label="Item Name" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} placeholder="e.g. Butter Chicken" />
 
             <div className="grid grid-cols-2 gap-3">
-              <Field
-                label="Category"
-                value={form.category}
-                onChange={(v) => setForm((f) => ({ ...f, category: v }))}
-                placeholder="Main Course"
-              />
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">Category</label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                >
+                  {MENU_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Item Type</label>
                 <select
@@ -162,7 +175,7 @@ export default function MenuManagement() {
 
       <PageHeader
         title="Menu Management"
-        subtitle="Manage categories, pricing, and availability"
+        subtitle="Categories, pricing, GST, and availability"
         action={
           <button
             onClick={() => setView("add")}

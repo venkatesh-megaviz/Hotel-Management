@@ -1,6 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
-
+import "@/lib/env";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { mountRoute } from "@/lib/express-adapter";
@@ -16,15 +14,37 @@ import * as menuId from "@/app/api/menu/[id]/route";
 import * as orders from "@/app/api/orders/route";
 import * as orderId from "@/app/api/orders/[id]/route";
 import * as inventory from "@/app/api/inventory/route";
+import * as inventoryId from "@/app/api/inventory/[id]/route";
 import * as stockIn from "@/app/api/inventory/stock-in/route";
 import * as expenses from "@/app/api/expenses/route";
 import * as expenseId from "@/app/api/expenses/[id]/route";
 import * as customers from "@/app/api/customers/route";
+import * as customerId from "@/app/api/customers/[id]/route";
+import * as customerRedeem from "@/app/api/customers/[id]/redeem/route";
 import * as dashboard from "@/app/api/dashboard/route";
 import * as reports from "@/app/api/reports/route";
 import * as profile from "@/app/api/settings/profile/route";
 import * as notifications from "@/app/api/notifications/route";
 import * as notificationId from "@/app/api/notifications/[id]/route";
+import * as tables from "@/app/api/tables/route";
+import * as tableId from "@/app/api/tables/[id]/route";
+import * as kitchen from "@/app/api/kitchen/route";
+import * as qrGuest from "@/app/api/ordering/qr/guest/[tableId]/route";
+import * as qrOrders from "@/app/api/ordering/qr/route";
+import * as qrOrderId from "@/app/api/ordering/qr/[id]/route";
+import * as qrCodes from "@/app/api/ordering/qr-codes/route";
+import * as onlineOrders from "@/app/api/ordering/online/route";
+import * as onlineOrderId from "@/app/api/ordering/online/[id]/route";
+import * as deliveries from "@/app/api/delivery/deliveries/route";
+import * as deliveryId from "@/app/api/delivery/deliveries/[id]/route";
+import * as deliveryAgents from "@/app/api/delivery/agents/route";
+import * as deliveryAgentId from "@/app/api/delivery/agents/[id]/route";
+import * as recipes from "@/app/api/recipes/route";
+import * as recipeId from "@/app/api/recipes/[id]/route";
+import * as accounting from "@/app/api/accounting/route";
+import * as subscription from "@/app/api/subscription/route";
+import * as attendance from "@/app/api/attendance/route";
+import * as attendanceId from "@/app/api/attendance/[id]/route";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -74,6 +94,9 @@ mountRoute(app, "patch", "/api/orders/:id", orderId.PATCH, true);
 mountRoute(app, "options", "/api/inventory", inventory.OPTIONS);
 mountRoute(app, "get", "/api/inventory", inventory.GET);
 
+mountRoute(app, "options", "/api/inventory/:id", inventoryId.OPTIONS);
+mountRoute(app, "patch", "/api/inventory/:id", inventoryId.PATCH, true);
+
 mountRoute(app, "options", "/api/inventory/stock-in", stockIn.OPTIONS);
 mountRoute(app, "get", "/api/inventory/stock-in", stockIn.GET);
 mountRoute(app, "post", "/api/inventory/stock-in", stockIn.POST);
@@ -83,11 +106,19 @@ mountRoute(app, "get", "/api/expenses", expenses.GET);
 mountRoute(app, "post", "/api/expenses", expenses.POST);
 
 mountRoute(app, "options", "/api/expenses/:id", expenseId.OPTIONS);
+mountRoute(app, "patch", "/api/expenses/:id", expenseId.PATCH, true);
 mountRoute(app, "delete", "/api/expenses/:id", expenseId.DELETE, true);
 
 mountRoute(app, "options", "/api/customers", customers.OPTIONS);
 mountRoute(app, "get", "/api/customers", customers.GET);
 mountRoute(app, "post", "/api/customers", customers.POST);
+
+mountRoute(app, "options", "/api/customers/:id", customerId.OPTIONS);
+mountRoute(app, "patch", "/api/customers/:id", customerId.PATCH, true);
+mountRoute(app, "delete", "/api/customers/:id", customerId.DELETE, true);
+
+mountRoute(app, "options", "/api/customers/:id/redeem", customerRedeem.OPTIONS);
+mountRoute(app, "post", "/api/customers/:id/redeem", customerRedeem.POST, true);
 
 mountRoute(app, "options", "/api/dashboard", dashboard.OPTIONS);
 mountRoute(app, "get", "/api/dashboard", dashboard.GET);
@@ -101,11 +132,72 @@ mountRoute(app, "patch", "/api/settings/profile", profile.PATCH);
 
 mountRoute(app, "options", "/api/notifications", notifications.OPTIONS);
 mountRoute(app, "get", "/api/notifications", notifications.GET);
+mountRoute(app, "patch", "/api/notifications", notifications.PATCH);
 mountRoute(app, "delete", "/api/notifications", notifications.DELETE);
 
 mountRoute(app, "options", "/api/notifications/:id", notificationId.OPTIONS);
 mountRoute(app, "patch", "/api/notifications/:id", notificationId.PATCH, true);
 mountRoute(app, "delete", "/api/notifications/:id", notificationId.DELETE, true);
+
+mountRoute(app, "options", "/api/tables", tables.OPTIONS);
+mountRoute(app, "get", "/api/tables", tables.GET);
+mountRoute(app, "post", "/api/tables", tables.POST);
+
+mountRoute(app, "options", "/api/tables/:id", tableId.OPTIONS);
+mountRoute(app, "patch", "/api/tables/:id", tableId.PATCH, true);
+mountRoute(app, "delete", "/api/tables/:id", tableId.DELETE, true);
+
+mountRoute(app, "options", "/api/kitchen", kitchen.OPTIONS);
+mountRoute(app, "get", "/api/kitchen", kitchen.GET);
+
+mountRoute(app, "options", "/api/ordering/qr/guest/:tableId", qrGuest.OPTIONS);
+mountRoute(app, "get", "/api/ordering/qr/guest/:tableId", qrGuest.GET, true);
+mountRoute(app, "post", "/api/ordering/qr/guest/:tableId", qrGuest.POST, true);
+
+mountRoute(app, "options", "/api/ordering/qr", qrOrders.OPTIONS);
+mountRoute(app, "get", "/api/ordering/qr", qrOrders.GET);
+mountRoute(app, "post", "/api/ordering/qr", qrOrders.POST);
+mountRoute(app, "options", "/api/ordering/qr/:id", qrOrderId.OPTIONS);
+mountRoute(app, "patch", "/api/ordering/qr/:id", qrOrderId.PATCH, true);
+mountRoute(app, "options", "/api/ordering/qr-codes", qrCodes.OPTIONS);
+mountRoute(app, "get", "/api/ordering/qr-codes", qrCodes.GET);
+
+mountRoute(app, "options", "/api/ordering/online", onlineOrders.OPTIONS);
+mountRoute(app, "get", "/api/ordering/online", onlineOrders.GET);
+mountRoute(app, "post", "/api/ordering/online", onlineOrders.POST);
+mountRoute(app, "options", "/api/ordering/online/:id", onlineOrderId.OPTIONS);
+mountRoute(app, "patch", "/api/ordering/online/:id", onlineOrderId.PATCH, true);
+
+mountRoute(app, "options", "/api/delivery/deliveries", deliveries.OPTIONS);
+mountRoute(app, "get", "/api/delivery/deliveries", deliveries.GET);
+mountRoute(app, "options", "/api/delivery/deliveries/:id", deliveryId.OPTIONS);
+mountRoute(app, "patch", "/api/delivery/deliveries/:id", deliveryId.PATCH, true);
+
+mountRoute(app, "options", "/api/delivery/agents", deliveryAgents.OPTIONS);
+mountRoute(app, "get", "/api/delivery/agents", deliveryAgents.GET);
+mountRoute(app, "post", "/api/delivery/agents", deliveryAgents.POST);
+mountRoute(app, "options", "/api/delivery/agents/:id", deliveryAgentId.OPTIONS);
+mountRoute(app, "patch", "/api/delivery/agents/:id", deliveryAgentId.PATCH, true);
+
+mountRoute(app, "options", "/api/recipes", recipes.OPTIONS);
+mountRoute(app, "get", "/api/recipes", recipes.GET);
+mountRoute(app, "post", "/api/recipes", recipes.POST);
+mountRoute(app, "options", "/api/recipes/:id", recipeId.OPTIONS);
+mountRoute(app, "patch", "/api/recipes/:id", recipeId.PATCH, true);
+mountRoute(app, "delete", "/api/recipes/:id", recipeId.DELETE, true);
+
+mountRoute(app, "options", "/api/accounting", accounting.OPTIONS);
+mountRoute(app, "get", "/api/accounting", accounting.GET);
+mountRoute(app, "patch", "/api/accounting", accounting.PATCH);
+
+mountRoute(app, "options", "/api/subscription", subscription.OPTIONS);
+mountRoute(app, "post", "/api/subscription", subscription.POST);
+
+mountRoute(app, "options", "/api/attendance", attendance.OPTIONS);
+mountRoute(app, "get", "/api/attendance", attendance.GET);
+mountRoute(app, "post", "/api/attendance", attendance.POST);
+mountRoute(app, "options", "/api/attendance/:id", attendanceId.OPTIONS);
+mountRoute(app, "patch", "/api/attendance/:id", attendanceId.PATCH, true);
 
 app.listen(port, () => {
   console.log(`HotelLite API listening on port ${port}`);

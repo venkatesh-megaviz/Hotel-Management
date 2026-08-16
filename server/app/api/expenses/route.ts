@@ -5,6 +5,7 @@ import { withCors, corsPreflight } from "@/lib/cors";
 import { expenseSchema } from "@/lib/validation";
 import Expense from "@/models/Expense";
 import { serializeExpense } from "@/lib/serialize-resources";
+import { seedDefaultExpenses } from "@/lib/seed-demo-data";
 
 export async function OPTIONS(request: Request) {
   return corsPreflight(request);
@@ -15,6 +16,7 @@ export async function GET(request: Request) {
   if (!auth) return unauthorized(request);
 
   await connectToDatabase();
+  await seedDefaultExpenses(auth.restaurantId);
 
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");

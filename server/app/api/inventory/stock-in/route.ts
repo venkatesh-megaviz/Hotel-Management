@@ -6,6 +6,8 @@ import { stockEntrySchema } from "@/lib/validation";
 import StockEntry from "@/models/StockEntry";
 import InventoryItem from "@/models/InventoryItem";
 import { serializeStockEntry } from "@/lib/serialize-resources";
+import { seedDefaultInventory } from "@/lib/seed-demo-data";
+import { checkLowStock } from "@/lib/inventory-alerts";
 
 export async function OPTIONS(request: Request) {
   return corsPreflight(request);
@@ -16,6 +18,7 @@ export async function GET(request: Request) {
   if (!auth) return unauthorized(request);
 
   await connectToDatabase();
+  await seedDefaultInventory(auth.restaurantId);
   const entries = await StockEntry.find({ restaurant: auth.restaurantId }).sort({ createdAt: -1 }).limit(50);
 
   return withCors(request, jsonResponse({ entries: entries.map(serializeStockEntry) }));
@@ -46,13 +49,15 @@ export async function POST(request: Request) {
       existing.quantity += data.quantity;
       existing.unit = data.unit;
       await existing.save();
+      await checkLowStock(auth.restaurantId, existing);
     } else {
-      await InventoryItem.create({
+      const created = await InventoryItem.create({
         restaurant: auth.restaurantId,
         name: data.item,
         unit: data.unit,
         quantity: data.quantity,
       });
+      await checkLowStock(auth.restaurantId, created);
     }
 
     return withCors(request, jsonResponse({ entry: serializeStockEntry(entry) }, 201));

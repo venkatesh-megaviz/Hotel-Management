@@ -3,17 +3,17 @@
 @theme {
   --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
 
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-500: #3b5bdb;
-  --color-brand-600: #2f5ce0;
-  --color-brand-700: #2547b3;
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-500: #155dfc;
+  --color-brand-600: #155dfc;
+  --color-brand-700: #1249c9;
 
-  --color-surface: #f5f6fa;
+  --color-surface: #f9fafb;
   --color-success-50: #ecfdf5;
-  --color-success-600: #16a34a;
+  --color-success-600: #009966;
   --color-warning-50: #fff7ed;
-  --color-warning-600: #ea580c;
+  --color-warning-600: #fe9a00;
   --color-danger-50: #fef2f2;
   --color-danger-600: #dc2626;
 }

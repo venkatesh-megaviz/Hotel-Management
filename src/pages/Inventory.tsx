@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
-import { fetchInventory, fetchStockEntries, createStockEntry, type InventoryItem, type StockEntry } from "@/lib/api";
+import { Plus, Pencil } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
+import { fetchInventory, fetchStockEntries, createStockEntry, updateInventoryItem, type InventoryItem, type StockEntry } from "@/lib/api";
 
 const emptyForm = { item: "", quantity: "", unit: "", supplier: "", cost: "" };
 
@@ -10,6 +11,9 @@ export default function Inventory() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [editForm, setEditForm] = useState({ quantity: "", reorderLevel: "" });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   function load() {
     setLoading(true);
@@ -41,10 +45,30 @@ export default function Inventory() {
     }
   }
 
+  async function handleEditSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingItem) return;
+    setSavingEdit(true);
+    try {
+      const res = await updateInventoryItem(editingItem.id, {
+        quantity: Number(editForm.quantity),
+        reorderLevel: Number(editForm.reorderLevel),
+      });
+      setItems((prev) => prev.map((i) => (i.id === editingItem.id ? res.item : i)));
+      setEditingItem(null);
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
+  function startEdit(item: InventoryItem) {
+    setEditingItem(item);
+    setEditForm({ quantity: String(item.quantity), reorderLevel: String(item.reorderLevel) });
+  }
+
   return (
-    <div>
-      <h2 className="mb-1 text-xl font-bold text-slate-900">Inventory — Stock In</h2>
-      <p className="mb-6 text-sm text-slate-500">Record stock received from suppliers</p>
+    <div className="space-y-6">
+      <PageHeader title="Inventory — Stock In" subtitle="Record stock received from suppliers" />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="card p-5 lg:col-span-1">
@@ -176,17 +200,66 @@ export default function Inventory() {
             {items.map((item) => {
               const low = item.quantity <= item.reorderLevel;
               return (
-                <div key={item.id}>
-                  <p className="text-sm text-slate-500">{item.name}</p>
+                <div key={item.id} className="relative rounded-xl bg-slate-50 p-3">
+                  <button
+                    type="button"
+                    onClick={() => startEdit(item)}
+                    className="absolute right-2 top-2 rounded-lg p-1 text-slate-400 hover:bg-white hover:text-brand-600"
+                    aria-label={`Edit ${item.name}`}
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <p className="pr-6 text-sm text-slate-500">{item.name}</p>
                   <p className={low ? "text-lg font-bold text-danger-600" : "text-lg font-bold text-slate-900"}>
                     {item.quantity} <span className="text-sm font-normal text-slate-400">{item.unit}</span>
                   </p>
+                  <p className="text-xs text-slate-400">Reorder at {item.reorderLevel}</p>
                 </div>
               );
             })}
           </div>
         )}
       </div>
+
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <form onSubmit={handleEditSave} className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h3 className="font-semibold text-slate-900">Edit {editingItem.name}</h3>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="mb-1 block text-sm text-slate-600">Current quantity</label>
+                <input
+                  type="number"
+                  min={0}
+                  required
+                  value={editForm.quantity}
+                  onChange={(e) => setEditForm((f) => ({ ...f, quantity: e.target.value }))}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm text-slate-600">Reorder level</label>
+                <input
+                  type="number"
+                  min={0}
+                  required
+                  value={editForm.reorderLevel}
+                  onChange={(e) => setEditForm((f) => ({ ...f, reorderLevel: e.target.value }))}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+            <div className="mt-5 flex gap-2">
+              <button type="button" onClick={() => setEditingItem(null)} className="flex-1 rounded-xl border border-slate-200 py-2 text-sm font-medium text-slate-600">
+                Cancel
+              </button>
+              <button type="submit" disabled={savingEdit} className="flex-1 rounded-xl bg-brand-600 py-2 text-sm font-semibold text-white disabled:opacity-60">
+                {savingEdit ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

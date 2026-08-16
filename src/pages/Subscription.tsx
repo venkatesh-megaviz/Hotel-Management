@@ -2,6 +2,8 @@ import { Check } from "lucide-react";
 import clsx from "clsx";
 import PageHeader from "@/components/PageHeader";
 import { useAuth } from "@/context/AuthContext";
+import { changeSubscriptionPlan, ApiError } from "@/lib/api";
+import { useState } from "react";
 
 const subscriptionPlans = [
   {
@@ -28,11 +30,28 @@ const subscriptionPlans = [
 ];
 
 export default function Subscription() {
-  const { restaurant } = useAuth();
+  const { restaurant, setRestaurant } = useAuth();
+  const [switching, setSwitching] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
+
+  async function handleSwitch(plan: "Basic" | "Standard" | "Premium") {
+    setSwitching(plan);
+    setMessage("");
+    try {
+      const res = await changeSubscriptionPlan(plan);
+      setRestaurant(res.restaurant);
+      setMessage(`Switched to ${plan} plan successfully.`);
+    } catch (err) {
+      setMessage(err instanceof ApiError ? err.message : "Failed to change plan");
+    } finally {
+      setSwitching(null);
+    }
+  }
 
   return (
     <div>
       <PageHeader title="Subscription" subtitle="Choose the plan that fits your business" />
+      {message && <p className="mb-4 text-sm text-slate-600">{message}</p>}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {subscriptionPlans.map((plan) => {
@@ -61,13 +80,14 @@ export default function Subscription() {
               </ul>
 
               <button
-                disabled={isCurrent}
+                disabled={isCurrent || switching === plan.name}
+                onClick={() => handleSwitch(plan.name)}
                 className={clsx(
-                  "mt-6 w-full rounded-xl py-2.5 text-sm font-semibold transition-colors",
+                  "mt-6 w-full rounded-xl py-2.5 text-sm font-semibold transition-colors disabled:opacity-60",
                   isCurrent ? "cursor-not-allowed bg-slate-100 text-slate-400" : "bg-brand-600 text-white hover:bg-brand-700",
                 )}
               >
-                {isCurrent ? "Current Plan" : "Switch Plan"}
+                {isCurrent ? "Current Plan" : switching === plan.name ? "Switching…" : "Switch Plan"}
               </button>
             </div>
           );
