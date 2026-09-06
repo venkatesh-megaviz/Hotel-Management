@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, Link } from "react-router-dom";
 import clsx from "clsx";
 import { ChevronLeft, Eye, EyeOff, Check, AlertCircle } from "lucide-react";
 import { useAuth, ApiError } from "@/context/AuthContext";
@@ -24,6 +24,10 @@ const businessTypes = ["Restaurant", "Café", "Cloud Kitchen", "Bar & Lounge", "
 
 const steps = ["Create Account", "Restaurant Setup"];
 
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+}
+
 export default function Login() {
   const navigate = useNavigate();
   const { register, isAuthenticated } = useAuth();
@@ -43,9 +47,36 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  function handleAccountContinue(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (!account.fullName.trim()) {
+      setError("Enter your full name");
+      return;
+    }
+    if (!isValidEmail(account.email)) {
+      setError("Enter a valid email");
+      return;
+    }
+    if (account.password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
+    setStep(2);
+  }
+
   async function handleFinishSetup(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!isValidEmail(account.email)) {
+      setError("Enter a valid email");
+      setStep(1);
+      return;
+    }
+
     setSubmitting(true);
     try {
       await register({
@@ -60,20 +91,24 @@ export default function Login() {
         plan: "Standard",
         billingCycle: "Monthly",
       });
-      navigate("/");
+      navigate("/app");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      const message = err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
+      setError(message);
+      if (/email/i.test(message)) {
+        setStep(1);
+      }
     } finally {
       setSubmitting(false);
     }
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   if (mode === "signin") {
-    return <SignIn onSwitch={() => setMode("signup")} onSuccess={() => navigate("/")} />;
+    return <SignIn onSwitch={() => setMode("signup")} onSuccess={() => navigate("/app")} />;
   }
 
   return (
@@ -133,25 +168,32 @@ export default function Login() {
               <h1 className="text-2xl font-bold text-slate-900">Create your account</h1>
               <p className="mt-1 text-sm text-slate-500">Start your free 14-day trial. No credit card needed.</p>
 
-              <form
-                className="mt-6 space-y-4"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  setStep(2);
-                }}
-              >
+              {error && (
+                <p className="mt-4 flex items-center gap-1.5 rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger-600">
+                  <AlertCircle size={14} /> {error}
+                </p>
+              )}
+
+              <form className="mt-6 space-y-4" onSubmit={handleAccountContinue} noValidate>
                 <Field
                   label="Full Name"
                   placeholder="Arjun Mehta"
                   value={account.fullName}
-                  onChange={(v) => setAccount((a) => ({ ...a, fullName: v }))}
+                  onChange={(v) => {
+                    setError(null);
+                    setAccount((a) => ({ ...a, fullName: v }));
+                  }}
                 />
                 <Field
                   label="Email Address"
                   type="email"
                   placeholder="arjun@spicegarden.com"
                   value={account.email}
-                  onChange={(v) => setAccount((a) => ({ ...a, email: v }))}
+                  onChange={(v) => {
+                    setError(null);
+                    setAccount((a) => ({ ...a, email: v }));
+                  }}
+                  invalid={Boolean(error && /email/i.test(error))}
                 />
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
@@ -162,7 +204,10 @@ export default function Login() {
                       minLength={8}
                       placeholder="At least 8 characters"
                       value={account.password}
-                      onChange={(e) => setAccount((a) => ({ ...a, password: e.target.value }))}
+                      onChange={(e) => {
+                        setError(null);
+                        setAccount((a) => ({ ...a, password: e.target.value }));
+                      }}
                       className="w-full rounded-lg border border-slate-200 px-3 py-2.5 pr-9 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                     />
                     <button
@@ -186,13 +231,13 @@ export default function Login() {
 
             <p className="mt-6 text-center text-xs text-slate-400">
               By continuing you agree to our{" "}
-              <a href="#" className="text-brand-600 hover:underline">
+              <Link to="/terms" className="text-brand-600 hover:underline">
                 Terms
-              </a>{" "}
+              </Link>{" "}
               and{" "}
-              <a href="#" className="text-brand-600 hover:underline">
+              <Link to="/privacy" className="text-brand-600 hover:underline">
                 Privacy Policy
-              </a>
+              </Link>
               .
             </p>
           </div>
@@ -262,7 +307,10 @@ export default function Login() {
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setStep(1)}
+                    onClick={() => {
+                      setError(null);
+                      setStep(1);
+                    }}
                     className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
                   >
                     Back
@@ -291,6 +339,7 @@ function Field({
   placeholder,
   type = "text",
   required = true,
+  invalid = false,
 }: {
   label: React.ReactNode;
   value: string;
@@ -298,6 +347,7 @@ function Field({
   placeholder: string;
   type?: string;
   required?: boolean;
+  invalid?: boolean;
 }) {
   return (
     <div>
@@ -308,7 +358,12 @@ function Field({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+        className={clsx(
+          "w-full rounded-lg border px-3 py-2.5 text-sm outline-none focus:ring-2",
+          invalid
+            ? "border-danger-600 focus:border-danger-600 focus:ring-danger-50"
+            : "border-slate-200 focus:border-brand-400 focus:ring-brand-100",
+        )}
       />
     </div>
   );
@@ -325,6 +380,12 @@ function SignIn({ onSwitch, onSuccess }: { onSwitch: () => void; onSuccess: () =
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!isValidEmail(email)) {
+      setError("Enter a valid email");
+      return;
+    }
+
     setSubmitting(true);
     try {
       await login(email, password);

@@ -30,7 +30,7 @@ const navSections = [
   {
     title: "Operations",
     items: [
-      { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+      { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
       { to: "/tables", label: "Table Management", icon: Grid3X3 },
       { to: "/kitchen", label: "Kitchen Display", icon: ChefHat },
       { to: "/billing", label: "Billing", icon: Receipt },

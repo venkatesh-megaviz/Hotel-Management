@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Award, Gift } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Award, ChevronDown, Gift, Search } from "lucide-react";
 import clsx from "clsx";
 import { fetchCustomers, redeemLoyaltyPoints, ApiError, type Customer } from "@/lib/api";
 
@@ -54,6 +54,8 @@ function PillButton({
   );
 }
 
+type Member = Customer & { points: number; tier: (typeof TIER_DEFS)[number] };
+
 export default function Loyalty() {
   const [tab, setTab] = useState<Tab>("members");
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -62,11 +64,34 @@ export default function Loyalty() {
   const [redeemPoints, setRedeemPoints] = useState("");
   const [redeemMsg, setRedeemMsg] = useState("");
   const [redeeming, setRedeeming] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerQuery, setPickerQuery] = useState("");
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  function loadCustomers(showLoading = true) {
+    if (showLoading) setLoading(true);
+    fetchCustomers()
+      .then((res) => setCustomers(Array.isArray(res.customers) ? res.customers : []))
+      .catch(() => setCustomers([]))
+      .finally(() => setLoading(false));
+  }
 
   useEffect(() => {
-    fetchCustomers()
-      .then((res) => setCustomers(res.customers))
-      .finally(() => setLoading(false));
+    loadCustomers(true);
+  }, []);
+
+  useEffect(() => {
+    if (tab === "redeem") loadCustomers(false);
+  }, [tab]);
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setPickerOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
   const members = useMemo(
@@ -78,6 +103,17 @@ export default function Loyalty() {
         })
         .sort((a, b) => b.points - a.points),
     [customers],
+  );
+
+  const filteredRedeemMembers = useMemo(() => {
+    const q = pickerQuery.trim().toLowerCase();
+    if (!q) return members;
+    return members.filter((m) => m.name.toLowerCase().includes(q) || m.phone.includes(q));
+  }, [members, pickerQuery]);
+
+  const selectedMember = useMemo(
+    () => members.find((m) => m.id === redeemCustomerId) ?? null,
+    [members, redeemCustomerId],
   );
 
   const tierCounts = useMemo(() => {
@@ -110,11 +146,19 @@ export default function Loyalty() {
       setRedeemMsg(`Redeemed ${pts.toLocaleString()} pts for ${member.name} (₹${pts.toLocaleString()} discount).`);
       setRedeemPoints("");
       setRedeemCustomerId("");
+      setPickerQuery("");
     } catch (err) {
       setRedeemMsg(err instanceof ApiError ? err.message : "Failed to redeem points.");
     } finally {
       setRedeeming(false);
     }
+  }
+
+  function selectMember(m: Member) {
+    setRedeemCustomerId(m.id);
+    setPickerQuery("");
+    setPickerOpen(false);
+    setRedeemMsg("");
   }
 
   return (
@@ -262,20 +306,66 @@ export default function Loyalty() {
           <p className="mt-1 text-sm text-slate-500">Look up a customer and apply point discount</p>
 
           <div className="mt-6 space-y-4">
-            <div>
+            <div ref={pickerRef} className="relative">
               <label className="mb-1.5 block text-sm font-medium text-slate-700">Select Customer</label>
-              <select
-                value={redeemCustomerId}
-                onChange={(e) => setRedeemCustomerId(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#155DFC] focus:ring-2 focus:ring-[#EFF6FF]"
+              <button
+                type="button"
+                onClick={() => setPickerOpen((o) => !o)}
+                className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left text-sm outline-none focus:border-[#155DFC] focus:ring-2 focus:ring-[#EFF6FF]"
               >
-                <option value="">— Choose customer —</option>
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.points.toLocaleString()} pts)
-                  </option>
-                ))}
-              </select>
+                <span className={selectedMember ? "font-medium text-slate-800" : "text-slate-400"}>
+                  {selectedMember
+                    ? `${selectedMember.name} (${selectedMember.points.toLocaleString()} pts)`
+                    : "— Choose customer —"}
+                </span>
+                <ChevronDown size={16} className="shrink-0 text-slate-400" />
+              </button>
+
+              {pickerOpen && (
+                <div className="absolute z-30 mt-1.5 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+                  <div className="relative border-b border-slate-100 p-2">
+                    <Search size={14} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      autoFocus
+                      type="text"
+                      value={pickerQuery}
+                      onChange={(e) => setPickerQuery(e.target.value)}
+                      placeholder="Search by name or phone…"
+                      className="w-full rounded-lg border border-slate-200 py-2 pl-8 pr-3 text-sm outline-none focus:border-[#155DFC]"
+                    />
+                  </div>
+                  <ul className="max-h-56 overflow-y-auto py-1">
+                    {loading ? (
+                      <li className="px-3 py-4 text-center text-sm text-slate-400">Loading customers…</li>
+                    ) : filteredRedeemMembers.length === 0 ? (
+                      <li className="px-3 py-4 text-center text-sm text-slate-400">
+                        {members.length === 0
+                          ? "No customers found. Add customers first."
+                          : "No matches for that search."}
+                      </li>
+                    ) : (
+                      filteredRedeemMembers.map((m) => (
+                        <li key={m.id}>
+                          <button
+                            type="button"
+                            onClick={() => selectMember(m)}
+                            className={clsx(
+                              "flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm hover:bg-slate-50",
+                              m.id === redeemCustomerId && "bg-[#EFF6FF]",
+                            )}
+                          >
+                            <span>
+                              <span className="font-medium text-slate-800">{m.name}</span>
+                              <span className="mt-0.5 block text-xs text-slate-400">{m.phone}</span>
+                            </span>
+                            <span className="shrink-0 font-semibold text-[#155DFC]">{m.points.toLocaleString()} pts</span>
+                          </button>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+              )}
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">Points to Redeem</label>

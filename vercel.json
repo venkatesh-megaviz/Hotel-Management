@@ -3,6 +3,10 @@
     {
       "source": "/api/(.*)",
       "destination": "https://hotel-management-p81z.onrender.com/api/$1"
+    },
+    {
+      "source": "/((?!assets/).*)",
+      "destination": "/index.html"
     }
   ]
 }

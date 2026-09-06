@@ -16,7 +16,7 @@ const MENU_CATEGORIES = ["Starters", "Main Course", "Breads", "Biryani", "Bevera
 
 const emptyForm: MenuItemInput = { name: "", category: "Main Course", price: 0, gst: 5, foodType: "Veg", available: true };
 
-type View = "list" | "add";
+type View = "list" | "form";
 
 export default function MenuManagement() {
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -24,8 +24,10 @@ export default function MenuManagement() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [view, setView] = useState<View>("list");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<MenuItemInput>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function load() {
     setLoading(true);
@@ -53,23 +55,66 @@ export default function MenuManagement() {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm("Delete this menu item?")) return;
     await deleteMenuItem(id);
     setItems((prev) => prev.filter((i) => i.id !== id));
   }
 
   function handleCancel() {
     setView("list");
+    setEditingId(null);
     setForm(emptyForm);
+    setError(null);
+  }
+
+  function openAdd() {
+    setEditingId(null);
+    setForm(emptyForm);
+    setError(null);
+    setView("form");
+  }
+
+  function openEdit(item: MenuItem) {
+    setEditingId(item.id);
+    setForm({
+      name: item.name,
+      category: item.category,
+      price: item.price,
+      gst: item.gst,
+      foodType: item.foodType,
+      available: item.available,
+    });
+    setError(null);
+    setView("form");
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+
+    if (!form.name.trim()) {
+      setError("Enter an item name");
+      return;
+    }
+    if (!form.price || form.price <= 0) {
+      setError("Enter a valid price");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const res = await createMenuItem(form);
-      setItems((prev) => [res.item, ...prev]);
+      if (editingId) {
+        const res = await updateMenuItem(editingId, form);
+        setItems((prev) => prev.map((i) => (i.id === editingId ? res.item : i)));
+      } else {
+        const res = await createMenuItem(form);
+        setItems((prev) => [res.item, ...prev]);
+      }
       setView("list");
+      setEditingId(null);
       setForm(emptyForm);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save menu item");
     } finally {
       setSubmitting(false);
     }
@@ -77,8 +122,9 @@ export default function MenuManagement() {
 
   const availableCount = items.filter((i) => i.available).length;
   const offCount = items.length - availableCount;
+  const isEditing = Boolean(editingId);
 
-  if (view === "add") {
+  if (view === "form") {
     return (
       <div>
         <PageHeader title="Menu Management" subtitle="Categories, pricing, GST, and availability" />
@@ -91,8 +137,16 @@ export default function MenuManagement() {
         </button>
 
         <div className="card max-w-xl p-6">
-          <h3 className="text-base font-semibold text-slate-900">Add New Menu Item</h3>
-          <p className="mb-5 text-xs text-slate-400">Fill in the details below</p>
+          <h3 className="text-base font-semibold text-slate-900">
+            {isEditing ? "Edit Menu Item" : "Add New Menu Item"}
+          </h3>
+          <p className="mb-5 text-xs text-slate-400">
+            {isEditing ? "Update the details below" : "Fill in the details below"}
+          </p>
+
+          {error && (
+            <p className="mb-4 rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger-600">{error}</p>
+          )}
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <Field label="Item Name" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} placeholder="e.g. Butter Chicken" />
@@ -142,6 +196,16 @@ export default function MenuManagement() {
               />
             </div>
 
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={form.available}
+                onChange={(e) => setForm((f) => ({ ...f, available: e.target.checked }))}
+                className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-100"
+              />
+              Available on menu
+            </label>
+
             <div className="flex gap-3 pt-2">
               <button
                 type="button"
@@ -155,7 +219,7 @@ export default function MenuManagement() {
                 disabled={submitting}
                 className="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
               >
-                {submitting ? "Adding…" : "Add to Menu"}
+                {submitting ? "Saving…" : isEditing ? "Save Changes" : "Add to Menu"}
               </button>
             </div>
           </form>
@@ -178,7 +242,7 @@ export default function MenuManagement() {
         subtitle="Categories, pricing, GST, and availability"
         action={
           <button
-            onClick={() => setView("add")}
+            onClick={openAdd}
             className="flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
           >
             <Plus size={16} />
@@ -257,7 +321,13 @@ export default function MenuManagement() {
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex justify-end gap-2">
-                        <button className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(item)}
+                          className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                          title="Edit item"
+                          aria-label={`Edit ${item.name}`}
+                        >
                           <Pencil size={14} />
                         </button>
                         <button

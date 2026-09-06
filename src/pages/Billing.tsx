@@ -10,7 +10,7 @@ import {
   CheckCircle2,
   Download,
   MessageCircle,
-  FileText,
+  Eye,
   MessageSquare,
 } from "lucide-react";
 import clsx from "clsx";
@@ -408,11 +408,9 @@ export default function Billing() {
             <div className="mt-5 grid grid-cols-2 gap-3">
               <Link
                 to={`/billing/invoice/${paidOrder.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100"
               >
-                <Download size={15} />
+                <Eye size={15} />
                 View Invoice
               </Link>
               <a
@@ -536,12 +534,10 @@ function BillHistory({ orders, loading }: { orders: Order[]; loading: boolean })
                       <div className="flex justify-end gap-1">
                         <Link
                           to={`/billing/invoice/${o.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                           title="View invoice"
                         >
-                          <FileText size={14} />
+                          <Eye size={14} />
                         </Link>
                         <a
                           href={`https://wa.me/?text=${encodeURIComponent(buildWhatsAppText(o, restaurant?.name ?? "Your Restaurant"))}`}

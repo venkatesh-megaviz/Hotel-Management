@@ -129,9 +129,25 @@ export const expenseSchema = z.object({
 
 export const expenseUpdateSchema = expenseSchema.partial();
 
+/** Normalize to 10-digit Indian mobile (strips +91 / 91 / leading 0). */
+function normalizeIndianMobile(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) return digits.slice(2);
+  if (digits.length === 11 && digits.startsWith("0")) return digits.slice(1);
+  return digits;
+}
+
+const indianMobileSchema = z
+  .string()
+  .trim()
+  .transform(normalizeIndianMobile)
+  .refine((v) => /^[6-9]\d{9}$/.test(v), {
+    message: "Enter a valid 10-digit mobile number",
+  });
+
 export const customerSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
-  phone: z.string().trim().min(6, "Enter a valid phone number"),
+  phone: indianMobileSchema,
   email: z.string().trim().optional().default(""),
   address: z.string().trim().optional().default(""),
   notes: z.string().trim().optional().default(""),

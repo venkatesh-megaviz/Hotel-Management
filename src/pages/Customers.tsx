@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, ChevronRight, ChevronLeft } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
-import { fetchCustomers, createCustomer, type Customer } from "@/lib/api";
+import { fetchCustomers, createCustomer, ApiError, type Customer } from "@/lib/api";
 
 type View = "list" | "add";
 
@@ -14,6 +14,18 @@ function isThisMonth(iso: string) {
   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
 }
 
+/** Digits only; strip +91 / 91 / leading 0 → 10-digit mobile. */
+function normalizeIndianMobile(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) return digits.slice(2);
+  if (digits.length === 11 && digits.startsWith("0")) return digits.slice(1);
+  return digits;
+}
+
+function isValidIndianMobile(raw: string): boolean {
+  return /^[6-9]\d{9}$/.test(normalizeIndianMobile(raw));
+}
+
 export default function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +33,7 @@ export default function Customers() {
   const [view, setView] = useState<View>("list");
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
 
   function load() {
     setLoading(true);
@@ -44,12 +57,20 @@ export default function Customers() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError("");
+    const phone = normalizeIndianMobile(form.phone);
+    if (!isValidIndianMobile(phone)) {
+      setFormError("Enter a valid 10-digit mobile number");
+      return;
+    }
     setSubmitting(true);
     try {
-      const res = await createCustomer(form);
+      const res = await createCustomer({ ...form, phone });
       setCustomers((prev) => [res.customer, ...prev]);
       setView("list");
       setForm(emptyForm);
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : "Failed to add customer.");
     } finally {
       setSubmitting(false);
     }
@@ -74,7 +95,18 @@ export default function Customers() {
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Full Name" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} placeholder="e.g. Aryan Kapoor" />
-              <Field label="Phone Number" value={form.phone} onChange={(v) => setForm((f) => ({ ...f, phone: v }))} placeholder="10-digit mobile number" />
+              <Field
+                label="Phone Number"
+                value={form.phone}
+                onChange={(v) => {
+                  setFormError("");
+                  setForm((f) => ({ ...f, phone: v.replace(/\D/g, "").slice(0, 10) }));
+                }}
+                placeholder="10-digit mobile number"
+                inputMode="numeric"
+                maxLength={10}
+                invalid={Boolean(formError && /phone|mobile/i.test(formError))}
+              />
             </div>
             <Field label="Email Address (optional)" value={form.email} onChange={(v) => setForm((f) => ({ ...f, email: v }))} placeholder="customer@email.com" type="email" required={false} />
             <Field label="Address (optional)" value={form.address} onChange={(v) => setForm((f) => ({ ...f, address: v }))} placeholder="Home or office address" required={false} />
@@ -88,6 +120,7 @@ export default function Customers() {
                 className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
               />
             </div>
+            {formError && <p className="text-sm text-red-600">{formError}</p>}
             <div className="flex gap-3 pt-2">
               <button type="button" onClick={() => setView("list")} className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50">
                 Cancel
@@ -190,6 +223,9 @@ function Field({
   placeholder,
   type = "text",
   required = true,
+  inputMode,
+  maxLength,
+  invalid = false,
 }: {
   label: string;
   value: string;
@@ -197,6 +233,9 @@ function Field({
   placeholder: string;
   type?: string;
   required?: boolean;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  maxLength?: number;
+  invalid?: boolean;
 }) {
   return (
     <div>
@@ -206,8 +245,14 @@ function Field({
         required={required}
         placeholder={placeholder}
         value={value}
+        inputMode={inputMode}
+        maxLength={maxLength}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+        className={
+          invalid
+            ? "w-full rounded-lg border border-red-300 px-3 py-2.5 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+            : "w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+        }
       />
     </div>
   );

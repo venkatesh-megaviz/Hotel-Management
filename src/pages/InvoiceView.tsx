@@ -16,6 +16,9 @@ export default function InvoiceView() {
 
   useEffect(() => {
     if (!id) return;
+    setLoading(true);
+    setError(false);
+    setOrder(null);
     Promise.all([fetchOrder(id), fetchMenuItems()])
       .then(([orderRes, menuRes]) => {
         setOrder(orderRes.order);
@@ -162,7 +165,14 @@ export default function InvoiceView() {
   }
 
   if (error || !order) {
-    return <p className="py-20 text-center text-sm text-slate-400">Couldn't load this invoice.</p>;
+    return (
+      <div className="py-16 text-center">
+        <p className="text-sm text-slate-500">Couldn&apos;t load this invoice.</p>
+        <Link to="/billing" className="mt-3 inline-flex text-sm font-semibold text-brand-600 hover:underline">
+          Back to Billing
+        </Link>
+      </div>
+    );
   }
 
   const whatsappText = encodeURIComponent(

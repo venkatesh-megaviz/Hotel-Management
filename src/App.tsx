@@ -2,7 +2,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/layouts/DashboardLayout";
+import Website from "@/pages/website/Website";
+import BuildPlan from "@/pages/build-plan/BuildPlan";
 import Login from "@/pages/Login";
+import { PrivacyPage, TermsPage } from "@/pages/Legal";
 import Dashboard from "@/pages/Dashboard";
 import TableManagement from "@/pages/TableManagement";
 import KitchenDisplay from "@/pages/KitchenDisplay";
@@ -31,11 +34,15 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          <Route path="/" element={<Website />} />
+          <Route path="/build-plan" element={<BuildPlan />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/qr-order/:tableId" element={<QRGuestOrder />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/app" element={<Dashboard />} />
               <Route path="/tables" element={<TableManagement />} />
               <Route path="/kitchen" element={<KitchenDisplay />} />
               <Route path="/qr-ordering" element={<QROrdering />} />

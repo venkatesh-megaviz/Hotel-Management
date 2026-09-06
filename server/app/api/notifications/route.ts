@@ -4,7 +4,6 @@ import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
 import Notification from "@/models/Notification";
 import { serializeNotification } from "@/lib/serialize-resources";
-import { seedDefaultNotifications } from "@/lib/seed-demo-data";
 
 export async function OPTIONS(request: Request) {
   return corsPreflight(request);
@@ -15,7 +14,8 @@ export async function GET(request: Request) {
   if (!auth) return unauthorized(request);
 
   await connectToDatabase();
-  await seedDefaultNotifications(auth.restaurantId);
+  // Do not re-seed here — Clear all would be undone on every revisit.
+  // Demo notifications are seeded once at restaurant registration.
   const notifications = await Notification.find({ restaurant: auth.restaurantId }).sort({ createdAt: -1 }).limit(50);
 
   return withCors(request, jsonResponse({ notifications: notifications.map(serializeNotification) }));
