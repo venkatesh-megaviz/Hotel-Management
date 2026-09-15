@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Activity,
@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Play,
   Receipt,
+  Sparkles,
   Users,
   UtensilsCrossed,
   Warehouse,
@@ -138,28 +139,73 @@ const MODULES = [
   },
 ] as const;
 
-const PRICING_MODULES = [
-  { id: "operations", name: "OPERATIONS", label: "Operations", price: 1499, desc: "Tables, kitchen, unified order hub.", popular: false },
-  { id: "billing", name: "BILLING", label: "Billing", price: 899, desc: "POS, multi-mode payments, GST invoices.", popular: false },
-  { id: "menu", name: "MENU", label: "Menu", price: 699, desc: "Digital menus, recipes, live availability.", popular: false },
-  { id: "crm", name: "CUSTOMER CRM", label: "Customer CRM", price: 999, desc: "Loyalty, WhatsApp marketing, segments.", popular: true },
-  { id: "finance", name: "FINANCE", label: "Finance", price: 899, desc: "P&L, expenses, revenue analytics.", popular: false },
-  { id: "inventory", name: "INVENTORY", label: "Inventory", price: 799, desc: "Stock levels, alerts, waste tracking.", popular: false },
-  { id: "staff", name: "STAFF", label: "Staff", price: 599, desc: "Shift management, attendance, training.", popular: false },
-  { id: "website", name: "WEBSITE ORDERS", label: "Website Orders", price: 1199, desc: "Personalized ordering widget for your site.", popular: false },
+type PlanCell =
+  | { kind: "check" }
+  | { kind: "dash" }
+  | { kind: "tag"; label: string; tone?: "muted" | "ai" | "free" };
+
+const PLAN_FEATURES: { name: string; cells: [PlanCell, PlanCell, PlanCell] }[] = [
+  { name: "POS + GST Billing", cells: [{ kind: "check" }, { kind: "check" }, { kind: "check" }] },
+  { name: "KOT", cells: [{ kind: "check" }, { kind: "check" }, { kind: "check" }] },
+  {
+    name: "Inventory",
+    cells: [
+      { kind: "tag", label: "Basic", tone: "muted" },
+      { kind: "tag", label: "Advanced", tone: "muted" },
+      { kind: "tag", label: "Advanced", tone: "muted" },
+    ],
+  },
+  {
+    name: "Reports",
+    cells: [
+      { kind: "tag", label: "Basic", tone: "muted" },
+      { kind: "tag", label: "Advanced", tone: "muted" },
+      { kind: "tag", label: "AI", tone: "ai" },
+    ],
+  },
+  { name: "CRM", cells: [{ kind: "dash" }, { kind: "check" }, { kind: "check" }] },
+  { name: "Loyalty", cells: [{ kind: "dash" }, { kind: "check" }, { kind: "check" }] },
+  { name: "QR Menu", cells: [{ kind: "dash" }, { kind: "check" }, { kind: "check" }] },
+  { name: "QR Ordering", cells: [{ kind: "dash" }, { kind: "check" }, { kind: "check" }] },
+  { name: "WhatsApp Reports", cells: [{ kind: "dash" }, { kind: "dash" }, { kind: "check" }] },
+  { name: "Food Cost", cells: [{ kind: "dash" }, { kind: "dash" }, { kind: "check" }] },
+  { name: "Multi-outlet", cells: [{ kind: "dash" }, { kind: "dash" }, { kind: "check" }] },
+  {
+    name: "Competitor Migration",
+    cells: [
+      { kind: "dash" },
+      { kind: "tag", label: "FREE", tone: "free" },
+      { kind: "tag", label: "FREE", tone: "free" },
+    ],
+  },
+];
+
+const PLANS = [
+  {
+    id: "basic",
+    tier: "BASIC",
+    name: "Dinevoro Basic",
+    desc: "For single-outlet starters",
+    popular: false,
+    comingSoonSolid: false,
+  },
+  {
+    id: "classic",
+    tier: "CLASSIC",
+    name: "Dinevoro Classic",
+    desc: "Most popular for growing restaurants",
+    popular: true,
+    comingSoonSolid: true,
+  },
+  {
+    id: "advanced",
+    tier: "ADVANCED",
+    name: "Dinevoro Advanced",
+    desc: "Multi-outlet & enterprise F&B",
+    popular: false,
+    comingSoonSolid: false,
+  },
 ] as const;
-
-const PRESETS = {
-  Starter: ["operations", "billing", "menu"],
-  Growth: ["operations", "billing", "menu", "crm", "inventory"],
-  Complete: ["operations", "billing", "menu", "crm", "finance", "inventory", "staff", "website"],
-} as const;
-
-const PRESET_META: Record<keyof typeof PRESETS, string> = {
-  Starter: "For new restaurants",
-  Growth: "Most popular",
-  Complete: "Full suite",
-};
 
 const TESTIMONIALS = [
   {
@@ -215,33 +261,31 @@ const FAQS = [
 const BAR_HEIGHTS = [42, 58, 48, 72, 64, 88, 76];
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-function formatInr(n: number) {
-  return `₹${n.toLocaleString("en-IN")}`;
+function PlanCellView({ cell }: { cell: PlanCell }) {
+  if (cell.kind === "check") {
+    return (
+      <span className="dv-plan-check" aria-label="Included">
+        <Check size={12} strokeWidth={3} />
+      </span>
+    );
+  }
+  if (cell.kind === "dash") {
+    return <span className="dv-plan-dash" aria-hidden />;
+  }
+  return (
+    <span className={`dv-plan-chip is-${cell.tone ?? "muted"}`}>
+      {cell.tone === "ai" && <Sparkles size={10} strokeWidth={2.5} />}
+      {cell.label}
+    </span>
+  );
 }
 
 export default function Website() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeModule, setActiveModule] = useState<(typeof MODULES)[number]["id"]>("operations");
-  const [selected, setSelected] = useState<string[]>([...PRESETS.Starter]);
-  const [preset, setPreset] = useState<keyof typeof PRESETS>("Starter");
   const [openFaq, setOpenFaq] = useState(0);
 
   const module = MODULES.find((m) => m.id === activeModule) ?? MODULES[0];
-
-  const total = useMemo(
-    () => PRICING_MODULES.filter((m) => selected.includes(m.id)).reduce((sum, m) => sum + m.price, 0),
-    [selected],
-  );
-
-  function applyPreset(name: keyof typeof PRESETS) {
-    setPreset(name);
-    setSelected([...PRESETS[name]]);
-  }
-
-  function toggleModule(id: string) {
-    setPreset("Growth");
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  }
 
   return (
     <div className={`dv-site${menuOpen ? " is-open" : ""}`}>
@@ -593,75 +637,48 @@ export default function Website() {
                 <span className="dv-title-line">what you need.</span>
               </h2>
               <p className="dv-pricing-sub">
-                Toggle the modules your restaurant needs. Your monthly total updates in real time.
+                Choose a ready-made plan or build a fully custom stack — pay only for the modules
+                your restaurant uses.
               </p>
             </header>
 
-            <div className="dv-presets">
-              {(Object.keys(PRESETS) as Array<keyof typeof PRESETS>).map((name) => (
-                <button
-                  key={name}
-                  type="button"
-                  className={`dv-preset${preset === name ? " is-active" : ""}`}
-                  onClick={() => applyPreset(name)}
+            <div className="dv-plans">
+              {PLANS.map((plan, planIndex) => (
+                <article
+                  key={plan.id}
+                  className={`dv-plan-card${plan.popular ? " is-popular" : ""}`}
                 >
-                  <span className="dv-preset-name">{name}</span>
-                  <span className="dv-preset-note">{PRESET_META[name]}</span>
-                  {name === "Growth" && <span className="dv-tag">Most popular</span>}
-                </button>
-              ))}
-            </div>
+                  {plan.popular && <span className="dv-plan-popular">Most popular</span>}
 
-            <div className="dv-pricing-layout">
-              <div className="dv-price-grid">
-                {PRICING_MODULES.map((m) => {
-                  const on = selected.includes(m.id);
-                  return (
-                    <div key={m.id} className={`dv-price-card${on ? " is-on" : ""}`}>
-                      <div className="dv-price-card-copy">
-                        <h4 className="dv-display">
-                          {m.name}
-                          {m.popular && <span className="dv-popular">POPULAR</span>}
-                        </h4>
-                        <div className="amt">{formatInr(m.price)}/mo</div>
-                        <p>{m.desc}</p>
-                      </div>
-                      <button
-                        type="button"
-                        className={`dv-toggle${on ? " is-on" : ""}`}
-                        aria-pressed={on}
-                        aria-label={`Toggle ${m.name}`}
-                        onClick={() => toggleModule(m.id)}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+                  <div className="dv-plan-card-top">
+                    <p className="dv-plan-tier">{plan.tier}</p>
+                    <h3 className="dv-plan-name">{plan.name}</h3>
+                    <span
+                      className={`dv-plan-soon${plan.comingSoonSolid ? " is-solid" : ""}`}
+                    >
+                      <span className="dv-plan-soon-dot" aria-hidden />
+                      Pricing coming soon
+                    </span>
+                    <p className="dv-plan-desc">{plan.desc}</p>
+                  </div>
 
-              <aside className="dv-plan">
-                <div className="dv-plan-top">
-                  <h3 className="dv-display">Your plan</h3>
-                  <p className="sel">{selected.length} modules selected</p>
-                  <ul className="dv-plan-lines">
-                    {PRICING_MODULES.filter((m) => selected.includes(m.id)).map((m) => (
-                      <li key={m.id}>
-                        <span>{m.label}</span>
-                        <span>{formatInr(m.price)}</span>
+                  <ul className="dv-plan-features">
+                    {PLAN_FEATURES.map((feature) => (
+                      <li key={feature.name}>
+                        <span className="dv-plan-feature-name">{feature.name}</span>
+                        <PlanCellView cell={feature.cells[planIndex]} />
                       </li>
                     ))}
-                    {selected.length === 0 && <li>Select at least one module</li>}
                   </ul>
-                </div>
-                <div className="dv-plan-bottom">
-                  <div className="dv-plan-total">
-                    <span>Monthly total</span>
-                    <strong className="dv-display">{formatInr(total)}</strong>
-                  </div>
-                  <Link to="/build-plan" className="dv-btn dv-btn-primary">
-                    Subscribe — {formatInr(total)}/mo →
+
+                  <Link
+                    to="/build-plan"
+                    className={`dv-plan-cta${plan.popular ? " is-solid" : ""}`}
+                  >
+                    Notify Me When Live →
                   </Link>
-                </div>
-              </aside>
+                </article>
+              ))}
             </div>
           </div>
         </section>

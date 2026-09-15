@@ -10,7 +10,6 @@ import {
   LineChart,
   Lock,
   Receipt,
-  Rocket,
   Sparkles,
   Users,
   UtensilsCrossed,
@@ -42,11 +41,9 @@ const MODULES = [
     name: "OPERATIONS",
     label: "Operations",
     price: 1499,
-    desc: "Tables, kitchen, unified order hub.",
+    desc: "Tables, kitchen, admin & more.",
     tags: ["Kitchen Display", "Table Management", "Unified Orders"],
-    category: "CORE OPERATIONS",
     icon: LayoutGrid,
-    popular: false,
   },
   {
     id: "billing",
@@ -55,9 +52,7 @@ const MODULES = [
     price: 899,
     desc: "POS, multi-mode payments, GST invoices.",
     tags: ["Full POS terminal", "Split Bills", "5+ Payment Modes"],
-    category: "CORE OPERATIONS",
     icon: Receipt,
-    popular: false,
   },
   {
     id: "menu",
@@ -66,9 +61,7 @@ const MODULES = [
     price: 699,
     desc: "Digital menus, recipes, live availability.",
     tags: ["Item Editor", "Category Management", "Recipe Costing"],
-    category: "CORE OPERATIONS",
     icon: UtensilsCrossed,
-    popular: false,
   },
   {
     id: "crm",
@@ -77,84 +70,133 @@ const MODULES = [
     price: 999,
     desc: "Loyalty, WhatsApp marketing, segments.",
     tags: ["Customer Profiles", "Loyalty Points", "WhatsApp Campaigns"],
-    category: "CUSTOMER & GROWTH",
     icon: Users,
-    popular: true,
-  },
-  {
-    id: "website",
-    name: "WEBSITE ORDERS",
-    label: "Website Orders",
-    price: 1199,
-    desc: "Personalized ordering widget for your site.",
-    tags: ["Order Widget", "Website Orders", "Custom Branding"],
-    category: "CUSTOMER & GROWTH",
-    icon: Globe,
-    popular: false,
   },
   {
     id: "finance",
     name: "FINANCE",
     label: "Finance",
     price: 899,
-    desc: "P&L, expenses, revenue analytics.",
+    desc: "P&L, expenses, deep analytics.",
     tags: ["Expense Manager", "P&L Dashboard", "Sales Reports"],
-    category: "FINANCE & STOCK",
     icon: LineChart,
-    popular: false,
   },
   {
     id: "inventory",
     name: "INVENTORY",
     label: "Inventory",
     price: 799,
-    desc: "Stock levels, alerts, waste tracking.",
+    desc: "Stock levels, alerts, recipe tracking.",
     tags: ["Real-time Stock", "Low-Stock Alerts", "Stock-In Management"],
-    category: "FINANCE & STOCK",
     icon: Warehouse,
-    popular: false,
   },
   {
     id: "staff",
     name: "STAFF",
     label: "Staff",
     price: 599,
-    desc: "Shift management, attendance, training.",
+    desc: "Shift management, attendance tracking.",
     tags: ["Attendance Tracking", "Shift Management", "Check In/Out"],
-    category: "TEAM",
     icon: Clock3,
-    popular: false,
+  },
+  {
+    id: "website",
+    name: "WEBSITE ORDERS",
+    label: "Website Orders",
+    price: 1199,
+    desc: "Embeddable ordering widget for your site.",
+    tags: ["Order Widget", "Website Orders", "Custom Branding"],
+    icon: Globe,
   },
 ] as const;
 
 type ModuleId = (typeof MODULES)[number]["id"];
+type PlanId = "basic" | "classic" | "advanced";
+type PlanCell =
+  | { kind: "check" }
+  | { kind: "dash" }
+  | { kind: "tag"; label: string; tone?: "muted" | "ai" | "free" };
 
-const CATEGORIES = ["CORE OPERATIONS", "CUSTOMER & GROWTH", "FINANCE & STOCK", "TEAM"] as const;
-
-const PRESETS = {
-  Starter: ["operations", "billing", "menu"] as ModuleId[],
-  Growth: ["operations", "billing", "menu", "crm", "inventory"] as ModuleId[],
-  Complete: MODULES.map((m) => m.id) as ModuleId[],
-};
-
-const QUICK_PICKS = [
+const PLAN_FEATURES: { name: string; cells: [PlanCell, PlanCell, PlanCell] }[] = [
+  { name: "POS + GST Billing", cells: [{ kind: "check" }, { kind: "check" }, { kind: "check" }] },
+  { name: "KOT", cells: [{ kind: "check" }, { kind: "check" }, { kind: "check" }] },
   {
-    id: "Starter" as const,
-    title: "Starter",
-    note: "For new restaurants",
-    icon: Zap,
+    name: "Inventory",
+    cells: [
+      { kind: "tag", label: "Basic", tone: "muted" },
+      { kind: "tag", label: "Advanced", tone: "muted" },
+      { kind: "tag", label: "Advanced", tone: "muted" },
+    ],
   },
   {
-    id: "Growth" as const,
-    title: "Growth",
-    note: "Most popular",
-    icon: Rocket,
+    name: "Reports",
+    cells: [
+      { kind: "tag", label: "Basic", tone: "muted" },
+      { kind: "tag", label: "Advanced", tone: "muted" },
+      { kind: "tag", label: "AI", tone: "ai" },
+    ],
+  },
+  { name: "CRM", cells: [{ kind: "dash" }, { kind: "check" }, { kind: "check" }] },
+  { name: "Loyalty", cells: [{ kind: "dash" }, { kind: "check" }, { kind: "check" }] },
+  { name: "QR Menu", cells: [{ kind: "dash" }, { kind: "check" }, { kind: "check" }] },
+  { name: "QR Ordering", cells: [{ kind: "dash" }, { kind: "check" }, { kind: "check" }] },
+  { name: "WhatsApp Reports", cells: [{ kind: "dash" }, { kind: "dash" }, { kind: "check" }] },
+  { name: "Food Cost", cells: [{ kind: "dash" }, { kind: "dash" }, { kind: "check" }] },
+  { name: "Multi-outlet", cells: [{ kind: "dash" }, { kind: "dash" }, { kind: "check" }] },
+  {
+    name: "Competitor Migration",
+    cells: [
+      { kind: "dash" },
+      { kind: "tag", label: "FREE", tone: "free" },
+      { kind: "tag", label: "FREE", tone: "free" },
+    ],
+  },
+];
+
+const PLANS: {
+  id: PlanId;
+  tier: string;
+  name: string;
+  desc: string;
+  popular: boolean;
+  modules: ModuleId[];
+  apiPlan: "Basic" | "Standard" | "Premium";
+}[] = [
+  {
+    id: "basic",
+    tier: "BASIC",
+    name: "Dinevoro Basic",
+    desc: "Single-outlet starters",
+    popular: false,
+    modules: ["operations", "billing", "menu"],
+    apiPlan: "Basic",
   },
   {
-    id: "Complete" as const,
-    title: "Complete",
-    note: "Full suite",
-    icon: Sparkles,
+    id: "classic",
+    tier: "CLASSIC",
+    name: "Dinevoro Classic",
+    desc: "Most popular for growing restaurants",
+    popular: true,
+    modules: ["operations", "billing", "menu", "crm", "inventory"],
+    apiPlan: "Standard",
+  },
+  {
+    id: "advanced",
+    tier: "ADVANCED",
+    name: "Dinevoro Advanced",
+    desc: "Multi-outlet & enterprise F&B",
+    popular: false,
+    modules: [
+      "operations",
+      "billing",
+      "menu",
+      "crm",
+      "finance",
+      "inventory",
+      "staff",
+      "website",
+    ],
+    apiPlan: "Premium",
   },
 ];
 
@@ -213,13 +255,39 @@ function moduleTagsPreview(ids: ModuleId[]) {
   return [...labels.slice(0, 3), `+${labels.length - 3}`];
 }
 
+function PlanFeatureCell({ cell }: { cell: PlanCell }) {
+  if (cell.kind === "check") {
+    return (
+      <span className="bp-tier-check" aria-label="Included">
+        <Check size={11} strokeWidth={3} />
+      </span>
+    );
+  }
+  if (cell.kind === "dash") {
+    return <span className="bp-tier-dash" aria-hidden />;
+  }
+  return (
+    <span className={`bp-tier-chip is-${cell.tone ?? "muted"}`}>
+      {cell.tone === "ai" && <Sparkles size={9} strokeWidth={2.5} />}
+      {cell.label}
+    </span>
+  );
+}
+
+function planForModules(modules: ModuleId[]): PlanId {
+  const n = modules.length;
+  if (n >= 7) return "advanced";
+  if (n >= 4) return "classic";
+  return "basic";
+}
+
 export default function BuildPlan() {
   const navigate = useNavigate();
   const { register, login } = useAuth();
   const [step, setStep] = useState(1);
   const [restaurantType, setRestaurantType] = useState<string | null>(null);
-  const [selected, setSelected] = useState<ModuleId[]>([]);
-  const [preset, setPreset] = useState<keyof typeof PRESETS | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>("advanced");
+  const [selected, setSelected] = useState<ModuleId[]>([...PLANS[2].modules]);
   const [activating, setActivating] = useState(false);
   const [activateError, setActivateError] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -234,22 +302,23 @@ export default function BuildPlan() {
     [selected],
   );
 
+  const activePlan = PLANS.find((p) => p.id === selectedPlan) ?? PLANS[2];
+
   function chooseType(id: string) {
     const type = RESTAURANT_TYPES.find((t) => t.id === id);
     if (!type) return;
     setRestaurantType(id);
-    setSelected([...type.modules]);
-    setPreset(null);
+    const planId = planForModules(type.modules);
+    const plan = PLANS.find((p) => p.id === planId) ?? PLANS[1];
+    setSelectedPlan(plan.id);
+    setSelected([...plan.modules]);
   }
 
-  function applyPreset(name: keyof typeof PRESETS) {
-    setPreset(name);
-    setSelected([...PRESETS[name]]);
-  }
-
-  function toggleModule(id: ModuleId) {
-    setPreset(null);
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  function selectPlan(id: PlanId) {
+    const plan = PLANS.find((p) => p.id === id);
+    if (!plan) return;
+    setSelectedPlan(id);
+    setSelected([...plan.modules]);
   }
 
   async function handleActivate(e: React.FormEvent) {
@@ -258,10 +327,7 @@ export default function BuildPlan() {
     setActivating(true);
 
     const phoneDigits = form.phone.replace(/\D/g, "");
-    const phone =
-      phoneDigits.length >= 10
-        ? phoneDigits.slice(-10)
-        : "9876543210";
+    const phone = phoneDigits.length >= 10 ? phoneDigits.slice(-10) : "9876543210";
 
     try {
       await register({
@@ -272,12 +338,11 @@ export default function BuildPlan() {
         businessType: TYPE_TO_BUSINESS[restaurantType ?? ""] ?? "Restaurant",
         city: "India",
         phone,
-        plan: "Standard",
+        plan: activePlan.apiPlan,
         billingCycle: "Monthly",
       });
       navigate("/app");
     } catch (err) {
-      // Email already registered — sign them in (demo-friendly fallback).
       const message = err instanceof ApiError ? err.message : "";
       if (/already exists/i.test(message)) {
         try {
@@ -300,36 +365,149 @@ export default function BuildPlan() {
     }
   }
 
-  return (
-    <div className={`bp-page${step === 2 ? " is-step2" : ""}`}>
-      <header className="bp-header">
-        <div className="bp-header-inner">
-          <Link to="/" className="bp-logo">
-            <img src={`${IMG}/logo.png`} alt="Dinevoro" />
-          </Link>
+  const header = (
+    <header className="bp-header">
+      <div className="bp-header-inner">
+        <Link to="/" className="bp-logo">
+          <img src={`${IMG}/logo.png`} alt="Dinevoro" />
+        </Link>
 
-          <nav className="bp-steps" aria-label="Build plan progress">
-            {STEPS.map((label, i) => {
-              const n = i + 1;
-              const done = step > n;
-              const active = step === n;
-              return (
-                <div key={label} className={`bp-step${active ? " is-active" : ""}${done ? " is-done" : ""}`}>
-                  <span className="bp-step-num">
-                    {done ? <Check size={14} strokeWidth={3} /> : n}
-                  </span>
-                  <span className="bp-step-label">{label}</span>
-                  {i < STEPS.length - 1 && <span className="bp-step-line" aria-hidden />}
-                </div>
-              );
-            })}
-          </nav>
+        <nav className="bp-steps" aria-label="Build plan progress">
+          {STEPS.map((label, i) => {
+            const n = i + 1;
+            const done = step > n;
+            const active = step === n;
+            return (
+              <div key={label} className={`bp-step${active ? " is-active" : ""}${done ? " is-done" : ""}`}>
+                <span className="bp-step-num">
+                  {done ? <Check size={14} strokeWidth={3} /> : n}
+                </span>
+                <span className="bp-step-label">{label}</span>
+                {i < STEPS.length - 1 && <span className="bp-step-line" aria-hidden />}
+              </div>
+            );
+          })}
+        </nav>
 
-          <Link to="/" className="bp-exit">
-            <X size={14} /> Exit
-          </Link>
+        <Link to="/" className="bp-exit">
+          <X size={14} /> Exit
+        </Link>
+      </div>
+    </header>
+  );
+
+  if (step === 2) {
+    return (
+      <div className="bp-page is-step2">
+        <div className="bp-step2-layout">
+          <div className="bp-step2-left">
+            {header}
+            <section className="bp-step2-main">
+              <p className="bp-kicker bp-kicker-left">Step 2 of 3</p>
+              <h1 className="bp-plan-heading">Choose your plan.</h1>
+              <p className="bp-sub bp-sub-left bp-plan-sub">
+                Pick a plan — we&apos;ll pre-load the right modules. Your summary updates live in the
+                panel.
+              </p>
+
+              <div className="bp-tier-grid">
+                {PLANS.map((plan, planIndex) => {
+                  const active = selectedPlan === plan.id;
+                  return (
+                    <article
+                      key={plan.id}
+                      className={`bp-tier-card${active ? " is-selected" : ""}${plan.popular ? " is-popular" : ""}`}
+                    >
+                      {plan.popular && <span className="bp-tier-popular">Popular</span>}
+                      <div className="bp-tier-top">
+                        <p className="bp-tier-label">{plan.tier}</p>
+                        <h3>{plan.name}</h3>
+                        <span className="bp-tier-soon">
+                          <span className="bp-tier-soon-dot" aria-hidden />
+                          Coming soon
+                        </span>
+                        <p className="bp-tier-desc">{plan.desc}</p>
+                      </div>
+                      <ul className="bp-tier-features">
+                        {PLAN_FEATURES.map((feature) => (
+                          <li key={feature.name}>
+                            <span>{feature.name}</span>
+                            <PlanFeatureCell cell={feature.cells[planIndex]} />
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        type="button"
+                        className={`bp-tier-select${active ? " is-selected" : ""}`}
+                        onClick={() => selectPlan(plan.id)}
+                      >
+                        {active ? (
+                          <>
+                            <Check size={14} strokeWidth={3} /> Selected
+                          </>
+                        ) : (
+                          "Select Plan"
+                        )}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+
+          <aside className="bp-plan">
+            <div>
+              <div className="bp-plan-head">
+                <h3>Your plan</h3>
+                <p className="bp-plan-count">{selected.length} modules</p>
+              </div>
+              <ul className="bp-plan-lines bp-plan-lines-modules">
+                {selected.map((id) => {
+                  const m = MODULES.find((mod) => mod.id === id);
+                  if (!m) return null;
+                  const Icon = m.icon;
+                  return (
+                    <li key={m.id}>
+                      <span className="bp-plan-item-icon">
+                        <Icon size={14} />
+                      </span>
+                      <span>{m.label}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="bp-ai-box">
+                <strong>
+                  <Sparkles size={14} /> AI always included
+                </strong>
+                <p>
+                  Demand forecasting, revenue insights, and auto-campaigns — at no extra cost.
+                </p>
+              </div>
+            </div>
+            <div className="bp-plan-actions">
+              <button
+                type="button"
+                className="bp-btn bp-btn-full"
+                disabled={selected.length === 0}
+                onClick={() => setStep(3)}
+              >
+                Review plan →
+              </button>
+              <button type="button" className="bp-text-link" onClick={() => setStep(1)}>
+                ← Change restaurant type
+              </button>
+            </div>
+          </aside>
         </div>
-      </header>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bp-page">
+      {header}
 
       <main className="bp-main">
         {step === 1 && (
@@ -390,140 +568,9 @@ export default function BuildPlan() {
                 disabled={!restaurantType}
                 onClick={() => setStep(2)}
               >
-                Continue to modules →
+                Continue to plans →
               </button>
-              <p>You can customize every module in the next step</p>
-            </div>
-          </section>
-        )}
-
-        {step === 2 && (
-          <section className="bp-step2">
-            <div className="bp-step2-layout">
-              <div className="bp-step2-main">
-                <p className="bp-kicker bp-kicker-left">Step 2 of 3</p>
-                <h1 className="bp-title bp-title-left">
-                  <span>Customise your</span>
-                  <span className="is-accent">module stack.</span>
-                </h1>
-                <p className="bp-sub bp-sub-left">
-                  Toggle modules on or off — your price updates live in the panel.
-                </p>
-
-                <div className="bp-quick-picks">
-                  <span className="bp-quick-label">Quick picks:</span>
-                  <div className="bp-quick-options">
-                    {QUICK_PICKS.map((pick) => {
-                      const Icon = pick.icon;
-                      const active = preset === pick.id;
-                      return (
-                        <button
-                          key={pick.id}
-                          type="button"
-                          className={`bp-quick-card${active ? " is-active" : ""}`}
-                          onClick={() => applyPreset(pick.id)}
-                        >
-                          <span className="bp-quick-icon">
-                            <Icon size={16} />
-                          </span>
-                          <span className="bp-quick-copy">
-                            <strong>{pick.title}</strong>
-                            <em>{pick.note}</em>
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {CATEGORIES.map((category) => {
-                  const items = MODULES.filter((m) => m.category === category);
-                  return (
-                    <div key={category} className="bp-cat">
-                      <h2>{category}</h2>
-                      <div className="bp-mod-grid">
-                        {items.map((m) => {
-                          const Icon = m.icon;
-                          const on = selected.includes(m.id);
-                          return (
-                            <div key={m.id} className={`bp-mod-card${on ? " is-on" : ""}`}>
-                              {m.popular && <span className="bp-popular">POPULAR</span>}
-                              <button
-                                type="button"
-                                className={`bp-toggle${on ? " is-on" : ""}`}
-                                aria-pressed={on}
-                                aria-label={`Toggle ${m.name}`}
-                                onClick={() => toggleModule(m.id)}
-                              />
-                              <div className="bp-mod-icon">
-                                <Icon size={18} />
-                              </div>
-                              <div className="bp-mod-copy">
-                                <div className="bp-mod-top">
-                                  <h3>{m.name}</h3>
-                                  <span>{formatInr(m.price)}/mo</span>
-                                </div>
-                                <p>{m.desc}</p>
-                                <div className="bp-tags">
-                                  {m.tags.map((tag) => (
-                                    <span key={tag}>{tag}</span>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <aside className="bp-plan">
-                <div>
-                  <div className="bp-plan-head">
-                    <h3>Your plan</h3>
-                    <p className="bp-plan-count">{selected.length} modules</p>
-                  </div>
-                  <ul className="bp-plan-lines">
-                    {MODULES.filter((m) => selected.includes(m.id)).map((m) => {
-                      const Icon = m.icon;
-                      return (
-                        <li key={m.id}>
-                          <span className="bp-plan-item-icon">
-                            <Icon size={14} />
-                          </span>
-                          <span>{m.label}</span>
-                          <span>{formatInr(m.price)}</span>
-                        </li>
-                      );
-                    })}
-                    {selected.length === 0 && <li>Select at least one module</li>}
-                  </ul>
-                  <div className="bp-plan-total">
-                    <span>Monthly total</span>
-                    <strong>{formatInr(total)}</strong>
-                  </div>
-                  <p className="bp-plan-free">First 30 days completely free</p>
-                  <div className="bp-ai-box">
-                    <strong>AI always included</strong>
-                    <p>Demand forecasting, revenue insights, and auto-campaigns — at no extra cost.</p>
-                  </div>
-                </div>
-                <div className="bp-plan-actions">
-                  <button
-                    type="button"
-                    className="bp-btn bp-btn-full"
-                    disabled={selected.length === 0}
-                    onClick={() => setStep(3)}
-                  >
-                    Review plan →
-                  </button>
-                  <button type="button" className="bp-text-link" onClick={() => setStep(1)}>
-                    ← Change restaurant type
-                  </button>
-                </div>
-              </aside>
+              <p>You can pick Basic, Classic, or Advanced next</p>
             </div>
           </section>
         )}
@@ -546,7 +593,9 @@ export default function BuildPlan() {
                     </button>
                   </div>
                   <ul className="bp-review-list">
-                    {MODULES.filter((m) => selected.includes(m.id)).map((m, i) => {
+                    {selected.map((id, i) => {
+                      const m = MODULES.find((mod) => mod.id === id);
+                      if (!m) return null;
                       const colors = [
                         "rgba(251, 191, 36, 0.5)",
                         "rgba(99, 102, 241, 0.5)",
@@ -606,7 +655,7 @@ export default function BuildPlan() {
                 </div>
 
                 <button type="button" className="bp-text-link bp-back" onClick={() => setStep(2)}>
-                  ← Back to modules
+                  ← Back to plans
                 </button>
               </div>
 

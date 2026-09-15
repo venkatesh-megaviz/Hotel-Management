@@ -997,11 +997,11 @@
   color: var(--dv-muted);
 }
 
-/* Pricing */
+/* Pricing — three plan comparison cards */
 .dv-pricing {
-  background: var(--dv-dark);
+  background: #000;
   color: #fff;
-  padding: 112px 0;
+  padding: 112px 0 120px;
 }
 
 .dv-pricing-head {
@@ -1009,19 +1009,20 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 56px;
 }
 
 .dv-pricing-head .dv-section-label {
   color: var(--dv-gold);
+  margin-bottom: 14px;
 }
 
 .dv-pricing-head .dv-section-title {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   align-items: center;
   color: rgba(245, 240, 232, 1);
   font-weight: 400;
-  font-size: clamp(36px, 5vw, 56px);
+  font-size: clamp(36px, 5.2vw, 58px);
   line-height: 0.95;
 }
 
@@ -1031,257 +1032,235 @@
 
 .dv-pricing-sub {
   text-align: center;
-  max-width: 480px;
+  max-width: 560px;
   margin: 0;
   font-family: var(--font-body);
-  color: rgba(245, 240, 232, 0.62);
+  color: rgba(245, 240, 232, 0.58);
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
-.dv-presets {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 40px;
-  flex-wrap: wrap;
-}
-
-.dv-preset {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  border: 1px solid rgba(214, 163, 81, 0.35);
-  background: transparent;
-  color: rgba(245, 240, 232, 0.85);
-  border-radius: 16px;
-  padding: 14px 22px;
-  min-width: 150px;
-  font-family: var(--font-body);
-  cursor: pointer;
-  text-align: left;
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.dv-preset-name {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.dv-preset-note {
-  font-size: 12px;
-  font-weight: 400;
-  color: rgba(245, 240, 232, 0.55);
-}
-
-.dv-preset.is-active {
-  background: rgba(214, 163, 81, 0.12);
-  border-color: var(--dv-gold);
-  color: var(--dv-gold);
-}
-
-.dv-preset.is-active .dv-preset-note {
-  color: rgba(214, 163, 81, 0.75);
-}
-
-.dv-preset .dv-tag {
-  position: absolute;
-  top: -10px;
-  right: 12px;
-  background: var(--dv-gold);
-  color: var(--dv-dark);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-radius: 999px;
-  padding: 3px 8px;
-}
-
-.dv-pricing-layout {
+.dv-plans {
   display: grid;
-  grid-template-columns: 1.55fr 0.75fr;
-  gap: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
   align-items: stretch;
 }
 
-.dv-price-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.dv-price-card {
+.dv-plan-card {
+  position: relative;
   display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  align-items: flex-start;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-direction: column;
+  background: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
-  padding: 20px;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  padding: 28px 22px 22px;
+  min-height: 100%;
 }
 
-.dv-price-card.is-on {
-  border-color: var(--dv-gold);
-  background: rgba(214, 163, 81, 0.08);
+.dv-plan-card.is-popular {
+  border: 1.5px solid var(--dv-gold);
+  box-shadow: 0 0 0 1px rgba(214, 163, 81, 0.15), 0 18px 48px rgba(214, 163, 81, 0.12);
 }
 
-.dv-price-card-copy {
-  min-width: 0;
-}
-
-.dv-price-card h4 {
-  margin: 0 0 6px;
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 400;
-  color: var(--dv-gold);
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.dv-price-card .amt {
-  margin: 0 0 8px;
+.dv-plan-popular {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--dv-gold);
+  color: var(--dv-dark);
   font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 700;
-  color: rgba(245, 240, 232, 0.95);
-}
-
-.dv-price-card p {
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: rgba(245, 240, 232, 0.58);
-  line-height: 1.45;
-}
-
-.dv-popular {
-  display: inline-flex;
-  border: 1px solid var(--dv-gold);
-  color: var(--dv-gold);
-  border-radius: 999px;
-  padding: 2px 7px;
-  font-family: var(--font-body);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  border-radius: 6px;
+  padding: 5px 12px;
+  white-space: nowrap;
 }
 
-.dv-toggle {
-  width: 44px;
-  height: 26px;
+.dv-plan-card-top {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 22px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dv-plan-tier {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(245, 240, 232, 0.45);
+}
+
+.dv-plan-name {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.dv-plan-soon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(214, 163, 81, 0.55);
   border-radius: 999px;
-  border: none;
-  background: rgba(255, 255, 255, 0.15);
-  position: relative;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.2s ease;
+  padding: 7px 12px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dv-gold);
+  background: transparent;
 }
 
-.dv-toggle::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
+.dv-plan-soon.is-solid {
+  background: var(--dv-gold);
+  border-color: var(--dv-gold);
+  color: var(--dv-dark);
+}
+
+.dv-plan-soon-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.dv-plan-desc {
+  margin: 2px 0 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(245, 240, 232, 0.55);
+}
+
+.dv-plan-features {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  display: grid;
+  flex: 1;
+}
+
+.dv-plan-features li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: rgba(245, 240, 232, 0.88);
+}
+
+.dv-plan-features li:last-child {
+  border-bottom: none;
+}
+
+.dv-plan-feature-name {
+  text-align: left;
+}
+
+.dv-plan-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #fff;
-  transition: transform 0.2s ease;
-}
-
-.dv-toggle.is-on {
-  background: var(--dv-gold);
-}
-
-.dv-toggle.is-on::after {
-  transform: translateX(18px);
-}
-
-.dv-plan {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-  min-height: 100%;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(214, 163, 81, 0.25);
-  border-radius: 22px;
-  padding: 28px 24px;
-}
-
-.dv-plan h3 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  background: rgba(214, 163, 81, 0.18);
   color: var(--dv-gold);
-  line-height: 1;
+  flex-shrink: 0;
 }
 
-.dv-plan .sel {
-  margin: 8px 0 22px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: rgba(245, 240, 232, 0.6);
+.dv-plan-dash {
+  display: block;
+  width: 14px;
+  height: 1.5px;
+  background: rgba(245, 240, 232, 0.28);
+  border-radius: 2px;
+  flex-shrink: 0;
 }
 
-.dv-plan-lines {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 12px;
+.dv-plan-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.dv-plan-lines li {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-family: var(--font-body);
-  font-size: 14px;
-  color: rgba(245, 240, 232, 0.9);
+.dv-plan-chip.is-muted {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(245, 240, 232, 0.72);
 }
 
-.dv-plan-bottom {
-  margin-top: 28px;
+.dv-plan-chip.is-ai {
+  background: rgba(139, 92, 246, 0.22);
+  color: #c4b5fd;
 }
 
-.dv-plan-total {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 18px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: rgba(245, 240, 232, 0.6);
+.dv-plan-chip.is-free {
+  background: transparent;
+  border: 1px solid rgba(214, 163, 81, 0.55);
+  color: var(--dv-gold);
 }
 
-.dv-plan-total strong {
-  font-family: var(--font-display);
-  font-size: 40px;
-  font-weight: 400;
-  color: rgba(245, 240, 232, 1);
-  letter-spacing: -0.02em;
-}
-
-.dv-plan .dv-btn {
+.dv-plan-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
   width: 100%;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  border: 1px solid rgba(214, 163, 81, 0.55);
+  color: var(--dv-gold);
+  background: transparent;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.dv-plan-cta:hover {
+  transform: translateY(-1px);
+  background: rgba(214, 163, 81, 0.1);
+}
+
+.dv-plan-cta.is-solid {
+  background: var(--dv-gold);
+  border-color: var(--dv-gold);
+  color: var(--dv-dark);
+}
+
+.dv-plan-cta.is-solid:hover {
+  background: #e0b86a;
+  box-shadow: 0 10px 28px rgba(214, 163, 81, 0.28);
 }
 
 /* Testimonials */
@@ -1636,14 +1615,13 @@
   .dv-ai-head,
   .dv-started-grid,
   .dv-module-panel,
-  .dv-pricing-layout,
+  .dv-plans,
   .dv-footer-top {
     grid-template-columns: 1fr;
   }
 
   .dv-ai-grid,
-  .dv-test-grid,
-  .dv-price-grid {
+  .dv-test-grid {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -1668,9 +1646,8 @@
     min-height: 280px;
   }
 
-  .dv-plan {
-    position: static;
-    min-height: auto;
+  .dv-plan-card.is-popular {
+    order: -1;
   }
 }
 
@@ -1681,7 +1658,6 @@
 
   .dv-ai-grid,
   .dv-test-grid,
-  .dv-price-grid,
   .dv-module-cards {
     grid-template-columns: 1fr;
   }
