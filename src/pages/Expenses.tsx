@@ -18,7 +18,7 @@ const categories: ExpenseCategory[] = ["Raw Materials", "Fuel", "Payroll", "Util
 const paymentModes = ["Cash", "UPI", "Card", "Online", "Bank Transfer"] as const;
 
 const categoryColors: Record<string, string> = {
-  "Raw Materials": "bg-[#EFF6FF] text-[#155DFC]",
+  "Raw Materials": "bg-[#faf6ee] text-[#d6a351]",
   Fuel: "bg-[#FFF7ED] text-[#FE9A00]",
   Payroll: "bg-[#F5F3FF] text-[#7C3AED]",
   Utilities: "bg-[#ECFEFF] text-[#0891B2]",
@@ -29,7 +29,7 @@ const categoryColors: Record<string, string> = {
 
 const KPI_CARDS = [
   { key: "month", labelSuffix: "Total", icon: CircleDollarSign, color: "#DC2626", bg: "#FDF2F8" },
-  { key: "raw", label: "Raw Materials", icon: ShoppingCart, color: "#155DFC", bg: "#EFF6FF" },
+  { key: "raw", label: "Raw Materials", icon: ShoppingCart, color: "#d6a351", bg: "#faf6ee" },
   { key: "bills", label: "Bills Attached", icon: Paperclip, color: "#009966", bg: "#ECFDF5" },
   { key: "today", label: "Today", icon: Calendar, color: "#FE9A00", bg: "#FFF7ED" },
 ] as const;
@@ -163,7 +163,7 @@ export default function Expenses() {
           >
             All Expenses
           </button>
-          <button className="rounded-lg bg-[#155dfc] px-4 py-2 text-sm font-semibold text-white">{editingId ? "Edit Expense" : "Add Expense"}</button>
+          <button className="rounded-lg bg-[#d6a351] px-4 py-2 text-sm font-semibold text-white">{editingId ? "Edit Expense" : "Add Expense"}</button>
         </div>
 
         <button
@@ -253,7 +253,7 @@ export default function Expenses() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-8 text-slate-400 hover:border-[#155DFC] hover:text-[#155DFC]"
+                  className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-8 text-slate-400 hover:border-[#d6a351] hover:text-[#d6a351]"
                 >
                   <Upload size={22} />
                   <span className="text-sm">Click to upload bill image or PDF</span>
@@ -265,7 +265,7 @@ export default function Expenses() {
               <button type="button" onClick={() => { setForm(emptyForm); setEditingId(null); setView("list"); }} className="h-8 rounded-2xl border border-slate-200 px-5 text-sm font-medium text-slate-600 hover:bg-slate-50">
                 Cancel
               </button>
-              <button type="submit" disabled={submitting} className="h-8 rounded-2xl bg-[#155dfc] px-5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
+              <button type="submit" disabled={submitting} className="h-8 rounded-2xl bg-[#d6a351] px-5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
                 {submitting ? "Saving…" : editingId ? "Update Expense" : "Save Expense"}
               </button>
             </div>
@@ -280,7 +280,7 @@ export default function Expenses() {
       <Toast toast={toast} />
 
       <div className="inline-flex rounded-xl bg-slate-100 p-1">
-        <button className="rounded-lg bg-[#155dfc] px-4 py-2 text-sm font-semibold text-white">All Expenses</button>
+        <button className="rounded-lg bg-[#d6a351] px-4 py-2 text-sm font-semibold text-white">All Expenses</button>
         <button onClick={() => { setForm(emptyForm); setEditingId(null); setView("add"); }} className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700">
           Add Expense
         </button>
@@ -314,7 +314,7 @@ export default function Expenses() {
               onClick={() => setActiveCategory(cat)}
               className={clsx(
                 "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                activeCategory === cat ? "bg-[#155dfc] text-white" : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50",
+                activeCategory === cat ? "bg-[#d6a351] text-white" : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50",
               )}
             >
               {cat}
@@ -391,7 +391,7 @@ export default function Expenses() {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#155DFC] focus:ring-2 focus:ring-[#EFF6FF]";
+  "w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#d6a351] focus:ring-2 focus:ring-[#faf6ee]";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (

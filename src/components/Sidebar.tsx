@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import {
   LayoutDashboard,
@@ -98,16 +98,18 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="hidden w-56 shrink-0 flex-col bg-[#101828] lg:flex print:hidden">
-      <div className="border-b border-[#1e2939] px-5 py-5">
-        <span className="text-sm font-bold text-white">HotelLite</span>
-        <p className="mt-0.5 truncate text-[10px] text-[#6a7282]">{restaurant?.name ?? "Your Restaurant"}</p>
+    <aside className="hidden w-56 shrink-0 flex-col bg-[rgba(10,8,7,1)] lg:flex print:hidden">
+      <div className="border-b border-white/10 px-4 py-4">
+        <Link to="/app" className="inline-flex rounded-lg bg-[#f7f3ec] px-2.5 py-2">
+          <img src="/website-images/logo.png" alt="Dinevoro" className="h-6 w-auto" />
+        </Link>
+        <p className="mt-2 truncate px-0.5 text-[10px] text-white/45">{restaurant?.name ?? "Your Restaurant"}</p>
       </div>
 
       <nav className="flex-1 space-y-4 overflow-y-auto px-2 pt-3">
         {navSections.map((section) => (
           <div key={section.title}>
-            <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-[#6a7282]">{section.title}</p>
+            <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/35">{section.title}</p>
             <div className="space-y-0.5">
               {section.items.map(({ to, label, icon: Icon, ...rest }) => (
                 <NavLink
@@ -116,8 +118,10 @@ export default function Sidebar() {
                   end={"end" in rest ? rest.end : false}
                   className={({ isActive }) =>
                     clsx(
-                      "flex items-center gap-3 rounded-none px-5 py-3 text-sm font-medium transition-colors",
-                      isActive ? "bg-[#155dfc] font-semibold text-white" : "text-[#99a1af] hover:bg-[#1e2939] hover:text-white",
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-[rgba(214,163,81,1)] font-semibold text-[rgba(10,8,7,1)]"
+                        : "text-white/55 hover:bg-white/5 hover:text-white",
                     )
                   }
                 >
@@ -135,19 +139,19 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="border-t border-[#1e2939] p-3">
+      <div className="border-t border-white/10 p-3">
         <div className="flex items-center gap-2.5 rounded-xl px-3 py-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#155dfc] text-xs font-semibold text-white">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[rgba(214,163,81,1)] text-xs font-semibold text-[rgba(10,8,7,1)]">
             {user?.fullName?.[0] ?? "A"}
           </div>
           <div className="min-w-0 leading-tight">
             <p className="truncate text-sm font-medium text-white">{user?.fullName ?? "Guest"}</p>
-            <p className="text-xs text-[#6a7282]">{user?.role ?? ""}</p>
+            <p className="text-xs text-white/45">{user?.role ?? ""}</p>
           </div>
         </div>
         <button
           onClick={handleSignOut}
-          className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#99a1af] transition-colors hover:bg-[#1e2939] hover:text-white"
+          className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/55 transition-colors hover:bg-white/5 hover:text-white"
         >
           <LogOut size={18} strokeWidth={2} />
           Sign Out

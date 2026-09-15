@@ -33,7 +33,7 @@ const KPI_CARDS = [
   {
     label: "Today's Revenue",
     icon: TrendingUp,
-    iconBg: "bg-[#EFF6FF] text-[#155DFC]",
+    iconBg: "bg-[#faf6ee] text-[#d6a351]",
     getValue: (d: DashboardData) => `₹${d.todayRevenue.toLocaleString()}`,
     getChange: (d: DashboardData) =>
       d.revenueChange ? `+${Math.abs(d.revenueChange)}% vs yesterday` : undefined,
@@ -76,7 +76,7 @@ const LIVE_STATUS = [
     ),
     sub: (d: DashboardData) => `${d.liveStatus.availableTables} available`,
     icon: Grid3X3,
-    iconBg: "bg-[#EFF6FF] text-[#155DFC]",
+    iconBg: "bg-[#faf6ee] text-[#d6a351]",
     valueColor: "text-slate-900",
   },
   {
@@ -106,7 +106,7 @@ const LIVE_STATUS = [
 ] as const;
 
 const QUICK_LINKS = [
-  { to: "/tables", label: "Tables", icon: Grid3X3, bg: "bg-[#155DFC]" },
+  { to: "/tables", label: "Tables", icon: Grid3X3, bg: "bg-[#d6a351]" },
   { to: "/kitchen", label: "Kitchen", icon: ChefHat, bg: "bg-[#FE9A00]" },
   { to: "/qr-ordering", label: "QR Order", icon: QrCode, bg: "bg-[#7C3AED]" },
   { to: "/online-ordering", label: "Online", icon: Globe, bg: "bg-[#0D9488]" },
@@ -199,7 +199,7 @@ export default function Dashboard() {
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-slate-900">Weekly Sales</h3>
-            <Link to="/reports" className="flex items-center gap-0.5 text-sm font-medium text-[#155DFC] hover:underline">
+            <Link to="/reports" className="flex items-center gap-0.5 text-sm font-medium text-[#d6a351] hover:underline">
               Full Report
               <ChevronRight size={16} />
             </Link>
@@ -220,7 +220,7 @@ export default function Dashboard() {
                 formatter={(value) => [`₹${Number(value).toLocaleString()}`, "Revenue"]}
                 contentStyle={{ borderRadius: 12, border: "1px solid #eef0f4", fontSize: 13 }}
               />
-              <Bar dataKey="revenue" fill="#155DFC" radius={[6, 6, 0, 0]} maxBarSize={48} isAnimationActive={false} />
+              <Bar dataKey="revenue" fill="#d6a351" radius={[6, 6, 0, 0]} maxBarSize={48} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -228,7 +228,7 @@ export default function Dashboard() {
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-slate-900">Stock Alerts</h3>
-            <Link to="/inventory" className="text-sm font-medium text-[#155DFC] hover:underline">
+            <Link to="/inventory" className="text-sm font-medium text-[#d6a351] hover:underline">
               Add Stock
             </Link>
           </div>
@@ -264,7 +264,7 @@ export default function Dashboard() {
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-slate-900">Recent Bills</h3>
-            <Link to="/billing" className="text-sm font-medium text-[#155DFC] hover:underline">
+            <Link to="/billing" className="text-sm font-medium text-[#d6a351] hover:underline">
               New Bill
             </Link>
           </div>
@@ -293,7 +293,7 @@ export default function Dashboard() {
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-slate-900">Today's Expenses</h3>
-            <Link to="/expenses" className="text-sm font-medium text-[#155DFC] hover:underline">
+            <Link to="/expenses" className="text-sm font-medium text-[#d6a351] hover:underline">
               Add Expense
             </Link>
           </div>

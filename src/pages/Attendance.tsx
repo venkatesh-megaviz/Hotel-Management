@@ -129,7 +129,7 @@ export default function Attendance() {
                 ["Present", summary.present, "text-emerald-700 bg-emerald-50"],
                 ["Late", summary.late, "text-amber-700 bg-amber-50"],
                 ["Absent", summary.absent, "text-red-700 bg-red-50"],
-                ["Total", summary.total, "text-blue-700 bg-blue-50"],
+                ["Total", summary.total, "text-brand-700 bg-brand-50"],
               ] as const
             ).map(([label, count, cls]) => (
               <div key={label} className={clsx("rounded-2xl p-4 text-center", cls.split(" ").slice(2).join(" "))}>

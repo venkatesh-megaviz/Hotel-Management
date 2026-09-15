@@ -3,7 +3,7 @@ import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 
 const titles: Record<string, { title: string; subtitle?: string }> = {
-  "/": { title: "Dashboard" },
+  "/app": { title: "Dashboard" },
   "/tables": { title: "Table Management" },
   "/kitchen": { title: "Kitchen Display System", subtitle: "Real-time order queue for the kitchen" },
   "/qr-ordering": { title: "QR Ordering", subtitle: "Manage table QR code orders" },
@@ -29,8 +29,8 @@ export default function DashboardLayout() {
   const location = useLocation();
   const meta = location.pathname.startsWith("/billing")
     ? titles["/billing"]
-    : (titles[location.pathname] ?? { title: "HotelLite" });
-  const isDashboard = location.pathname === "/";
+    : (titles[location.pathname] ?? { title: "Dinevoro" });
+  const isDashboard = location.pathname === "/app";
 
   return (
     <div className="flex h-screen overflow-hidden bg-surface print:h-auto print:overflow-visible">

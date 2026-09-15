@@ -1,7 +1,7 @@
 import clsx from "clsx";
 
 const styles: Record<string, string> = {
-  Preparing: "bg-[#EFF6FF] text-[#155DFC]",
+  Preparing: "bg-[#faf6ee] text-[#d6a351]",
   Served: "bg-[#ECFDF5] text-[#009966]",
   Billed: "bg-[#ECFDF5] text-[#009966]",
   Cancelled: "bg-danger-50 text-danger-600",

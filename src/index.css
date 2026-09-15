@@ -1,15 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, "Segoe UI", sans-serif;
+  --font-display: "National Park", Georgia, serif;
 
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-500: #155dfc;
-  --color-brand-600: #155dfc;
-  --color-brand-700: #1249c9;
+  /* Dinevoro website theme (replaces blue) */
+  --color-brand-50: #faf6ee;
+  --color-brand-100: #f3e8d2;
+  --color-brand-200: #e8d4a8;
+  --color-brand-400: #e0b86a;
+  --color-brand-500: #d6a351;
+  --color-brand-600: #d6a351;
+  --color-brand-700: #b8862e;
 
-  --color-surface: #f9fafb;
+  --color-ink: #0a0807;
+  --color-surface: #f7f3ec;
   --color-success-50: #ecfdf5;
   --color-success-600: #009966;
   --color-warning-50: #fff7ed;
@@ -28,6 +33,7 @@
   body {
     @apply bg-surface text-slate-800 antialiased;
     font-family: var(--font-sans);
+    color: rgba(10, 8, 7, 0.88);
   }
 
   * {

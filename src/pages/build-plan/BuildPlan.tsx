@@ -18,7 +18,19 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { useAuth, ApiError } from "@/context/AuthContext";
 import "./BuildPlan.css";
+
+const TYPE_TO_BUSINESS: Record<string, string> = {
+  "quick-service": "Restaurant",
+  "full-service": "Restaurant",
+  "cafe-bakery": "Café",
+  "cloud-kitchen": "Cloud Kitchen",
+  "hotel-fnb": "Restaurant",
+};
+
+/** Trial accounts created from the website use this temporary password. */
+const TRIAL_PASSWORD = "Demo@1234";
 
 const IMG = "/website-images";
 
@@ -203,10 +215,13 @@ function moduleTagsPreview(ids: ModuleId[]) {
 
 export default function BuildPlan() {
   const navigate = useNavigate();
+  const { register, login } = useAuth();
   const [step, setStep] = useState(1);
   const [restaurantType, setRestaurantType] = useState<string | null>(null);
   const [selected, setSelected] = useState<ModuleId[]>([]);
   const [preset, setPreset] = useState<keyof typeof PRESETS | null>(null);
+  const [activating, setActivating] = useState(false);
+  const [activateError, setActivateError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     restaurant: "",
@@ -237,20 +252,52 @@ export default function BuildPlan() {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
-  function handleActivate(e: React.FormEvent) {
+  async function handleActivate(e: React.FormEvent) {
     e.preventDefault();
-    navigate("/login", {
-      state: {
-        fromBuildPlan: true,
-        name: form.name,
-        restaurant: form.restaurant,
-        email: form.email,
-        phone: form.phone,
-        modules: selected,
-        restaurantType,
-        total,
-      },
-    });
+    setActivateError(null);
+    setActivating(true);
+
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    const phone =
+      phoneDigits.length >= 10
+        ? phoneDigits.slice(-10)
+        : "9876543210";
+
+    try {
+      await register({
+        fullName: form.name.trim(),
+        email: form.email.trim(),
+        password: TRIAL_PASSWORD,
+        restaurantName: form.restaurant.trim(),
+        businessType: TYPE_TO_BUSINESS[restaurantType ?? ""] ?? "Restaurant",
+        city: "India",
+        phone,
+        plan: "Standard",
+        billingCycle: "Monthly",
+      });
+      navigate("/app");
+    } catch (err) {
+      // Email already registered — sign them in (demo-friendly fallback).
+      const message = err instanceof ApiError ? err.message : "";
+      if (/already exists/i.test(message)) {
+        try {
+          await login(form.email.trim(), TRIAL_PASSWORD);
+          navigate("/app");
+          return;
+        } catch {
+          try {
+            await login(form.email.trim(), "x");
+            navigate("/app");
+            return;
+          } catch {
+            /* fall through */
+          }
+        }
+      }
+      setActivateError(message || "Could not activate trial. Please try again.");
+    } finally {
+      setActivating(false);
+    }
   }
 
   return (
@@ -603,8 +650,9 @@ export default function BuildPlan() {
                       placeholder="+91 98765 43210"
                     />
                   </label>
-                  <button type="submit" className="bp-btn bp-btn-full">
-                    Activate — free for 30 days →
+                  {activateError && <p className="bp-activate-error">{activateError}</p>}
+                  <button type="submit" className="bp-btn bp-btn-full" disabled={activating}>
+                    {activating ? "Activating…" : "Activate — free for 30 days →"}
                   </button>
                 </form>
                 <p className="bp-secure">

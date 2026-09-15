@@ -11,14 +11,14 @@ import {
 
 type Tab = "deliveries" | "agents";
 
-const BLUE = "#155DFC";
+const BLUE = "#d6a351";
 const ORANGE = "#FE9A00";
 const GREEN = "#009966";
 
 const labelColors: Record<string, string> = {
   "Pending Assignment": "bg-[#FFF7ED] text-[#FE9A00]",
   "Picked Up": "bg-[#F5F3FF] text-[#7C3AED]",
-  "Out for Delivery": "bg-[#EFF6FF] text-[#155DFC]",
+  "Out for Delivery": "bg-[#faf6ee] text-[#d6a351]",
   Delivered: "bg-[#ECFDF5] text-[#009966]",
 };
 
@@ -29,7 +29,7 @@ const agentStatusColors: Record<string, string> = {
 };
 
 const SUMMARY = [
-  { key: "active" as const, label: "Active", color: BLUE, bg: "#EFF6FF" },
+  { key: "active" as const, label: "Active", color: BLUE, bg: "#faf6ee" },
   { key: "pending" as const, label: "Pending", color: ORANGE, bg: "#FFF7ED" },
   { key: "delivered" as const, label: "Delivered", color: GREEN, bg: "#ECFDF5" },
 ];
@@ -108,7 +108,7 @@ export default function DeliveryManagement() {
             onClick={() => setTab(key)}
             className={clsx(
               "rounded-lg px-5 py-2 text-sm font-semibold transition-colors",
-              tab === key ? "bg-[#155dfc] text-white" : "text-slate-500 hover:text-slate-700",
+              tab === key ? "bg-[#d6a351] text-white" : "text-slate-500 hover:text-slate-700",
             )}
           >
             {label}
@@ -198,7 +198,7 @@ export default function DeliveryManagement() {
             <div key={agent.id} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#EFF6FF] text-base font-bold text-[#155DFC]">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#faf6ee] text-base font-bold text-[#d6a351]">
                     {agent.name[0]}
                   </div>
                   <div>

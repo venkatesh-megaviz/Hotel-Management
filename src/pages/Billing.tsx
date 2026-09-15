@@ -217,7 +217,7 @@ export default function Billing() {
                       onClick={() => addToCart(item)}
                       className={clsx(
                         "flex flex-col items-start rounded-xl border p-4 text-left transition",
-                        selected ? "border-[#8EC5FF] bg-brand-50/60 ring-1 ring-[#8EC5FF]" : "border-slate-200 hover:border-brand-200",
+                        selected ? "border-[#e0b86a] bg-brand-50/60 ring-1 ring-[#e0b86a]" : "border-slate-200 hover:border-brand-200",
                       )}
                     >
                       <span className="flex w-full items-center justify-between">

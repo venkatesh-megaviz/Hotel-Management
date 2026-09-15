@@ -8,12 +8,12 @@ const PLATFORMS = ["All", "Swiggy", "Zomato", "Website"] as const;
 const platformColors: Record<string, string> = {
   Swiggy: "bg-orange-100 text-orange-700",
   Zomato: "bg-red-100 text-red-700",
-  Website: "bg-blue-100 text-blue-700",
+  Website: "bg-brand-100 text-brand-700",
 };
 
 const statusColors: Record<string, string> = {
   New: "text-amber-600 bg-amber-50",
-  Accepted: "text-blue-600 bg-blue-50",
+  Accepted: "text-brand-600 bg-brand-50",
   Preparing: "text-purple-600 bg-purple-50",
   OutForDelivery: "text-cyan-600 bg-cyan-50",
   Delivered: "text-emerald-600 bg-emerald-50",

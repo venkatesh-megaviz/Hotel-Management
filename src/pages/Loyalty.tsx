@@ -45,7 +45,7 @@ function PillButton({
       disabled={disabled}
       className={clsx(
         "flex h-8 items-center justify-center gap-1.5 rounded-2xl px-4 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60",
-        variant === "primary" ? "bg-[#155dfc] text-white" : "border border-slate-200 bg-white text-slate-600",
+        variant === "primary" ? "bg-[#d6a351] text-white" : "border border-slate-200 bg-white text-slate-600",
         className,
       )}
     >
@@ -178,7 +178,7 @@ export default function Loyalty() {
             onClick={() => setTab(key)}
             className={clsx(
               "rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
-              tab === key ? "bg-[#155dfc] text-white" : "text-slate-500 hover:text-slate-700",
+              tab === key ? "bg-[#d6a351] text-white" : "text-slate-500 hover:text-slate-700",
             )}
           >
             {label}
@@ -231,7 +231,7 @@ export default function Loyalty() {
                             {m.tier.label}
                           </span>
                         </td>
-                        <td className="px-5 py-4 font-semibold text-[#155DFC]">{m.points.toLocaleString()} pts</td>
+                        <td className="px-5 py-4 font-semibold text-[#d6a351]">{m.points.toLocaleString()} pts</td>
                         <td className="px-5 py-4 font-medium text-slate-800">₹{m.totalSpent.toLocaleString()}</td>
                         <td className="px-5 py-4">
                           <PillButton
@@ -262,13 +262,13 @@ export default function Loyalty() {
             <h3 className="font-semibold text-slate-900">Points Configuration</h3>
             <p className="mt-1 text-sm text-slate-500">1 point earned per ₹10 spent</p>
             <div className="mt-4 grid grid-cols-2 gap-4 sm:max-w-md">
-              <div className="rounded-xl bg-[#EFF6FF] px-4 py-3">
+              <div className="rounded-xl bg-[#faf6ee] px-4 py-3">
                 <p className="text-xs text-slate-500">Points per ₹10</p>
-                <p className="text-lg font-bold text-[#155DFC]">1 pt</p>
+                <p className="text-lg font-bold text-[#d6a351]">1 pt</p>
               </div>
-              <div className="rounded-xl bg-[#EFF6FF] px-4 py-3">
+              <div className="rounded-xl bg-[#faf6ee] px-4 py-3">
                 <p className="text-xs text-slate-500">1 point value</p>
-                <p className="text-lg font-bold text-[#155DFC]">₹1</p>
+                <p className="text-lg font-bold text-[#d6a351]">₹1</p>
               </div>
             </div>
           </div>
@@ -311,7 +311,7 @@ export default function Loyalty() {
               <button
                 type="button"
                 onClick={() => setPickerOpen((o) => !o)}
-                className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left text-sm outline-none focus:border-[#155DFC] focus:ring-2 focus:ring-[#EFF6FF]"
+                className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left text-sm outline-none focus:border-[#d6a351] focus:ring-2 focus:ring-[#faf6ee]"
               >
                 <span className={selectedMember ? "font-medium text-slate-800" : "text-slate-400"}>
                   {selectedMember
@@ -331,7 +331,7 @@ export default function Loyalty() {
                       value={pickerQuery}
                       onChange={(e) => setPickerQuery(e.target.value)}
                       placeholder="Search by name or phone…"
-                      className="w-full rounded-lg border border-slate-200 py-2 pl-8 pr-3 text-sm outline-none focus:border-[#155DFC]"
+                      className="w-full rounded-lg border border-slate-200 py-2 pl-8 pr-3 text-sm outline-none focus:border-[#d6a351]"
                     />
                   </div>
                   <ul className="max-h-56 overflow-y-auto py-1">
@@ -351,14 +351,14 @@ export default function Loyalty() {
                             onClick={() => selectMember(m)}
                             className={clsx(
                               "flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm hover:bg-slate-50",
-                              m.id === redeemCustomerId && "bg-[#EFF6FF]",
+                              m.id === redeemCustomerId && "bg-[#faf6ee]",
                             )}
                           >
                             <span>
                               <span className="font-medium text-slate-800">{m.name}</span>
                               <span className="mt-0.5 block text-xs text-slate-400">{m.phone}</span>
                             </span>
-                            <span className="shrink-0 font-semibold text-[#155DFC]">{m.points.toLocaleString()} pts</span>
+                            <span className="shrink-0 font-semibold text-[#d6a351]">{m.points.toLocaleString()} pts</span>
                           </button>
                         </li>
                       ))
@@ -375,7 +375,7 @@ export default function Loyalty() {
                 placeholder="Enter points"
                 value={redeemPoints}
                 onChange={(e) => setRedeemPoints(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#155DFC] focus:ring-2 focus:ring-[#EFF6FF]"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-[#d6a351] focus:ring-2 focus:ring-[#faf6ee]"
               />
             </div>
             {redeemMsg && (

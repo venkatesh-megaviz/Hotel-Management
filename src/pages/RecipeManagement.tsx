@@ -121,7 +121,7 @@ export default function RecipeManagement() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {(
               [
-                ["Total Recipes", summary.total, "text-blue-700 bg-blue-50"],
+                ["Total Recipes", summary.total, "text-brand-700 bg-brand-50"],
                 ["Avg Margin", `${summary.avgMargin}%`, "text-emerald-700 bg-emerald-50"],
                 ["Avg Cost", `₹${summary.avgCost}`, "text-orange-700 bg-orange-50"],
                 ["Avg Price", `₹${summary.avgPrice}`, "text-purple-700 bg-purple-50"],

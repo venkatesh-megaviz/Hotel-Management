@@ -852,6 +852,12 @@
   color: var(--bp-muted);
 }
 
+.bp-activate-error {
+  margin: 0;
+  font-size: 13px;
+  color: #dc2626;
+}
+
 .bp-activate form {
   display: grid;
   gap: 14px;

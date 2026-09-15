@@ -334,7 +334,7 @@ export default function Topbar({ title, subtitle, greeting }: TopbarProps) {
         </button>
 
         <div className="flex items-center gap-2 rounded-xl py-1 pl-1 pr-3 hover:bg-slate-50">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-[rgba(10,8,7,1)]">
             {userName[0]}
           </div>
           <div className="hidden leading-tight sm:block">

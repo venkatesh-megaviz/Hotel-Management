@@ -87,7 +87,7 @@ export default function QRGuestOrder() {
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
       <header className="border-b border-slate-200 bg-white px-4 py-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-[#155DFC]">{restaurantName}</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-[#d6a351]">{restaurantName}</p>
         <h1 className="text-xl font-bold text-slate-900">Table {tableNumber}</h1>
         <p className="text-sm text-slate-500">Scan & order — no app required</p>
       </header>
@@ -101,7 +101,7 @@ export default function QRGuestOrder() {
                 onClick={() => setCategory(c)}
                 className={clsx(
                   "rounded-full px-3 py-1.5 text-xs font-semibold",
-                  category === c ? "bg-[#155DFC] text-white" : "bg-white text-slate-600 ring-1 ring-slate-200",
+                  category === c ? "bg-[#d6a351] text-white" : "bg-white text-slate-600 ring-1 ring-slate-200",
                 )}
               >
                 {c}
@@ -121,7 +121,7 @@ export default function QRGuestOrder() {
                 </div>
                 <button
                   onClick={() => addToCart(item)}
-                  className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#155DFC] py-2 text-sm font-semibold text-white hover:opacity-90"
+                  className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#d6a351] py-2 text-sm font-semibold text-white hover:opacity-90"
                 >
                   <Plus size={14} />
                   Add
@@ -133,7 +133,7 @@ export default function QRGuestOrder() {
 
         <div className="h-fit rounded-2xl bg-white p-4 ring-1 ring-slate-100 lg:sticky lg:top-4">
           <div className="mb-4 flex items-center gap-2">
-            <ShoppingBag size={18} className="text-[#155DFC]" />
+            <ShoppingBag size={18} className="text-[#d6a351]" />
             <h2 className="font-bold text-slate-900">Your Order</h2>
           </div>
 
@@ -142,7 +142,7 @@ export default function QRGuestOrder() {
             placeholder="Your name (optional)"
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
-            className="mb-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#155DFC]"
+            className="mb-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#d6a351]"
           />
 
           {cart.length === 0 ? (

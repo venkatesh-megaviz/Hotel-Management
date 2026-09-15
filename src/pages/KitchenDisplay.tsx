@@ -6,7 +6,7 @@ import { fetchKitchenOrders, updateOrder, type Order } from "@/lib/api";
 const TABS = ["All", "New", "Preparing", "Ready"] as const;
 
 const KDS_ORANGE = "#FE9A00";
-const KDS_BLUE = "#155DFC";
+const KDS_BLUE = "#d6a351";
 const KDS_GREEN = "#009966";
 
 const COLUMNS = [
@@ -22,7 +22,7 @@ const COLUMNS = [
     key: "Preparing" as const,
     label: "Preparing",
     color: KDS_BLUE,
-    bgLight: "bg-[#EFF6FF]",
+    bgLight: "bg-[#faf6ee]",
     action: "Mark Ready",
     next: "Ready" as const,
   },
@@ -159,7 +159,7 @@ export default function KitchenDisplay() {
                 onClick={() => setTab(t)}
                 className={clsx(
                   "rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
-                  tab === t ? "bg-[#155dfc] text-white" : "text-slate-600 hover:text-slate-900",
+                  tab === t ? "bg-[#d6a351] text-white" : "text-slate-600 hover:text-slate-900",
                 )}
               >
                 {t}

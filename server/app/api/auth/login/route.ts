@@ -3,11 +3,18 @@ import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/mongodb";
 import User, { type UserDoc } from "@/models/User";
 import Restaurant, { type RestaurantDoc } from "@/models/Restaurant";
-import { loginSchema } from "@/lib/validation";
 import { signToken, JWT_COOKIE_NAME } from "@/lib/jwt";
 import { withCors, corsPreflight } from "@/lib/cors";
 import { authCookieOptions } from "@/lib/auth-cookie";
 import { serializeUser, serializeRestaurant } from "@/lib/serialize";
+import { ensureDemoAccount } from "@/lib/ensure-demo-account";
+import { z } from "zod";
+
+/** Demo-friendly: any non-empty email + password can enter the dashboard. */
+const demoLoginSchema = z.object({
+  email: z.string().trim().min(1, "Email is required"),
+  password: z.string().min(1, "Password is required"),
+});
 
 export async function OPTIONS(request: Request) {
   return corsPreflight(request);
@@ -16,7 +23,7 @@ export async function OPTIONS(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const parsed = loginSchema.safeParse(body);
+    const parsed = demoLoginSchema.safeParse(body);
 
     if (!parsed.success) {
       return withCors(
@@ -25,32 +32,46 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, password } = parsed.data;
+    const email = parsed.data.email.toLowerCase();
+    const { password } = parsed.data;
     await connectToDatabase();
 
     const user = (await User.findOne({ email })) as UserDoc | null;
-    if (!user) {
-      return withCors(request, jsonResponse({ error: "Invalid email or password" }, 401));
+    if (user) {
+      const valid = await bcrypt.compare(password, user.passwordHash);
+      if (valid) {
+        const restaurant = (await Restaurant.findById(user.restaurant)) as RestaurantDoc | null;
+        const token = signToken({
+          userId: user._id.toString(),
+          restaurantId: restaurant?._id.toString() ?? "",
+        });
+        return withCors(
+          request,
+          jsonResponse(
+            {
+              user: serializeUser(user),
+              restaurant: restaurant ? serializeRestaurant(restaurant) : null,
+            },
+            200,
+            [{ name: JWT_COOKIE_NAME, value: token, options: authCookieOptions(30 * 24 * 60 * 60) }],
+          ),
+        );
+      }
     }
 
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) {
-      return withCors(request, jsonResponse({ error: "Invalid email or password" }, 401));
-    }
-
-    const restaurant = (await Restaurant.findById(user.restaurant)) as RestaurantDoc | null;
-
+    // Demo fallback: any other credentials open the Spice Garden demo account.
+    const demo = await ensureDemoAccount();
     const token = signToken({
-      userId: user._id.toString(),
-      restaurantId: restaurant?._id.toString() ?? "",
+      userId: demo.user._id.toString(),
+      restaurantId: demo.restaurant._id.toString(),
     });
 
     return withCors(
       request,
       jsonResponse(
         {
-          user: serializeUser(user),
-          restaurant: restaurant ? serializeRestaurant(restaurant) : null,
+          user: serializeUser(demo.user),
+          restaurant: serializeRestaurant(demo.restaurant),
         },
         200,
         [{ name: JWT_COOKIE_NAME, value: token, options: authCookieOptions(30 * 24 * 60 * 60) }],

@@ -8,7 +8,7 @@ const AREAS = ["All", "Indoor", "Outdoor", "Private"] as const;
 
 const statusStyles: Record<TableStatus, { card: string; badge: string; label: string }> = {
   Available: { card: "border-emerald-200 bg-emerald-50", badge: "bg-emerald-100 text-emerald-700", label: "Available" },
-  Occupied: { card: "border-blue-200 bg-blue-50", badge: "bg-blue-100 text-blue-700", label: "Occupied" },
+  Occupied: { card: "border-brand-200 bg-brand-50", badge: "bg-brand-100 text-brand-700", label: "Occupied" },
   Reserved: { card: "border-amber-200 bg-amber-50", badge: "bg-amber-100 text-amber-700", label: "Reserved" },
   Billing: { card: "border-rose-200 bg-rose-50", badge: "bg-rose-100 text-rose-700", label: "Billing" },
 };
@@ -69,7 +69,7 @@ export default function TableManagement() {
         {(
           [
             ["Available", summary.available, "text-emerald-700 bg-emerald-50 border-emerald-100"],
-            ["Occupied", summary.occupied, "text-blue-700 bg-blue-50 border-blue-100"],
+            ["Occupied", summary.occupied, "text-brand-700 bg-brand-50 border-brand-100"],
             ["Reserved", summary.reserved, "text-amber-700 bg-amber-50 border-amber-100"],
             ["Billing", summary.billing, "text-rose-700 bg-rose-50 border-rose-100"],
           ] as const

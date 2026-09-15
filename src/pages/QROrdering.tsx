@@ -8,7 +8,7 @@ type Tab = "orders" | "codes";
 
 const statusColors: Record<string, string> = {
   Pending: "text-orange-600 bg-orange-50",
-  Accepted: "text-blue-600 bg-blue-50",
+  Accepted: "text-brand-600 bg-brand-50",
   Completed: "text-emerald-600 bg-emerald-50",
   Rejected: "text-red-600 bg-red-50",
 };
@@ -81,7 +81,7 @@ export default function QROrdering() {
             {(
               [
                 ["Pending", summary.pending, "text-orange-700 bg-orange-50"],
-                ["Accepted", summary.accepted, "text-blue-700 bg-blue-50"],
+                ["Accepted", summary.accepted, "text-brand-700 bg-brand-50"],
                 ["Completed", summary.completed, "text-emerald-700 bg-emerald-50"],
               ] as const
             ).map(([label, count, cls]) => (
