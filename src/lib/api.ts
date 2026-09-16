@@ -757,3 +757,199 @@ export function fetchDeliveryAgents() {
 export function updateDeliveryAgent(id: string, payload: Partial<DeliveryAgent>) {
   return request<{ agent: DeliveryAgent }>(`/api/delivery/agents/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
 }
+
+// ---------- Super Admin ----------
+
+export type SaTenantStatus = "Active" | "Trial" | "Inactive";
+export type SaTenantPlan = "Basic" | "Classic" | "Advanced";
+
+export interface SaTenant {
+  id: string;
+  code: string;
+  name: string;
+  city: string;
+  type: string;
+  plan: SaTenantPlan;
+  modulesEnabled: number;
+  modulesTotal: number;
+  mrr: number;
+  status: SaTenantStatus;
+  joined: string;
+  owner: string;
+  email: string;
+  phone: string;
+  address: string;
+  nextBilling: string;
+  activeModules: string[];
+}
+
+export interface SaPlan {
+  id: string;
+  slug: string;
+  name: string;
+  price: number;
+  tenants: number;
+  mrrLabel: string;
+  modules: string;
+  status: "ACTIVE" | "COMING SOON";
+  features: string[];
+  modulesList: string[];
+}
+
+export interface SaSupportTicket {
+  id: string;
+  dbId: string;
+  tenant: string;
+  issue: string;
+  status: "Open" | "In Progress" | "Resolved";
+  priority?: string;
+  submitted: string;
+}
+
+export interface SaPlatformSettings {
+  platformName: string;
+  companyName: string;
+  supportEmail: string;
+  billingContact: string;
+  gstNumber: string;
+  notifications: {
+    newTenantRegistrations: boolean;
+    trialExpiryAlerts: boolean;
+    paymentFailures: boolean;
+    supportTicketAlerts: boolean;
+    monthlyRevenueReport: boolean;
+  };
+}
+
+export function fetchSaOverview() {
+  return request<{
+    stats: {
+      totalTenants: number;
+      activeSubscriptions: number;
+      activeRate: number;
+      monthlyRevenue: number;
+      monthlyRevenueLabel: string;
+      retentionRate: number;
+    };
+    mrrSeries: { month: string; value: number }[];
+    moduleAdoption: { name: string; pct: number; color: string }[];
+    recentTenants: SaTenant[];
+  }>("/api/super-admin/overview");
+}
+
+export function fetchSaTenants(params?: { q?: string; status?: string }) {
+  const sp = new URLSearchParams();
+  if (params?.q) sp.set("q", params.q);
+  if (params?.status) sp.set("status", params.status);
+  const qs = sp.toString();
+  return request<{ tenants: SaTenant[]; total: number }>(`/api/super-admin/tenants${qs ? `?${qs}` : ""}`);
+}
+
+export function fetchSaTenant(id: string) {
+  return request<{
+    tenant: SaTenant;
+    allModules: string[];
+    invoices: { id: string; date: string; amount: number; status: string }[];
+    activity: { text: string; date: string }[];
+  }>(`/api/super-admin/tenants/${id}`);
+}
+
+export function updateSaTenant(
+  id: string,
+  payload: Partial<{
+    name: string;
+    city: string;
+    businessType: string;
+    plan: SaTenantPlan;
+    tenantStatus: SaTenantStatus;
+    ownerName: string;
+    email: string;
+    phone: string;
+    address: string;
+    enabledModules: string[];
+  }>,
+) {
+  return request<{ tenant: SaTenant }>(`/api/super-admin/tenants/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchSaPlans() {
+  return request<{
+    plans: SaPlan[];
+    events: { restaurant: string; event: string; plan: string; amount: string; date: string; tone: string }[];
+  }>("/api/super-admin/plans");
+}
+
+export function updateSaPlan(
+  id: string,
+  payload: Partial<{
+    name: string;
+    price: number;
+    status: "ACTIVE" | "COMING SOON";
+    features: string[];
+    modules: string[];
+  }>,
+) {
+  return request<{ plan: SaPlan }>(`/api/super-admin/plans/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function createSaPlan(payload: {
+  name: string;
+  price: number;
+  status?: "ACTIVE" | "COMING SOON";
+  features?: string[];
+  modules?: string[];
+}) {
+  return request<{ plan: SaPlan }>("/api/super-admin/plans", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchSaAnalytics() {
+  return request<{
+    mrrSeries: { month: string; value: number }[];
+    tenantGrowth: { month: string; value: number }[];
+    planDistribution: { name: string; tenants: number; pct: number; color: string }[];
+    keyMetrics: { label: string; value: string }[];
+    moduleAdoption: { name: string; pct: number; color: string }[];
+    counts: { active: number; trial: number; inactive: number; total: number };
+  }>("/api/super-admin/analytics");
+}
+
+export function fetchSaSupport() {
+  return request<{
+    tickets: SaSupportTicket[];
+    stats: { open: number; inProgress: number; resolved: number; total: number };
+  }>("/api/super-admin/support");
+}
+
+export function updateSaSupportTicket(id: string, payload: { status?: string; priority?: string; issue?: string }) {
+  return request<{ ticket: SaSupportTicket }>(`/api/super-admin/support/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchSaSettings() {
+  return request<{ settings: SaPlatformSettings }>("/api/super-admin/settings");
+}
+
+export function updateSaSettings(payload: Partial<SaPlatformSettings>) {
+  return request<{ settings: SaPlatformSettings }>("/api/super-admin/settings", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateSaPassword(payload: { currentPassword: string; newPassword: string }) {
+  return request<{ ok: boolean; message: string }>("/api/super-admin/settings/password", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}

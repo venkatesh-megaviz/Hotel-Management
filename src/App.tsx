@@ -28,6 +28,14 @@ import Subscription from "@/pages/Subscription";
 import Notifications from "@/pages/Notifications";
 import InvoiceView from "@/pages/InvoiceView";
 import QRGuestOrder from "@/pages/QRGuestOrder";
+import SuperAdminLayout from "@/pages/super-admin/SuperAdminLayout";
+import SuperAdminOverview from "@/pages/super-admin/Overview";
+import TenantManagement from "@/pages/super-admin/TenantManagement";
+import TenantDetail from "@/pages/super-admin/TenantDetail";
+import Subscriptions from "@/pages/super-admin/Subscriptions";
+import Analytics from "@/pages/super-admin/Analytics";
+import SupportCenter from "@/pages/super-admin/SupportCenter";
+import PlatformSettings from "@/pages/super-admin/PlatformSettings";
 
 export default function App() {
   return (
@@ -63,6 +71,15 @@ export default function App() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/subscription" element={<Subscription />} />
               <Route path="/notifications" element={<Notifications />} />
+            </Route>
+            <Route path="/super-admin" element={<SuperAdminLayout />}>
+              <Route index element={<SuperAdminOverview />} />
+              <Route path="tenants" element={<TenantManagement />} />
+              <Route path="tenants/:id" element={<TenantDetail />} />
+              <Route path="subscriptions" element={<Subscriptions />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="support" element={<SupportCenter />} />
+              <Route path="settings" element={<PlatformSettings />} />
             </Route>
           </Route>
         </Routes>

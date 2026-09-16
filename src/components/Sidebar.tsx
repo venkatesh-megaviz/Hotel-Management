@@ -22,6 +22,7 @@ import {
   QrCode,
   Globe,
   Truck,
+  Shield,
 } from "lucide-react";
 import clsx from "clsx";
 import { fetchNotifications } from "@/lib/api";
@@ -77,6 +78,7 @@ const navSections = [
     items: [
       { to: "/notifications", label: "Notifications", icon: Bell, badge: true },
       { to: "/settings", label: "Settings", icon: Settings },
+      { to: "/super-admin", label: "Super Admin", icon: Shield },
     ],
   },
 ];
@@ -98,10 +100,10 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="hidden w-56 shrink-0 flex-col bg-[rgba(10,8,7,1)] lg:flex print:hidden">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 shrink-0 flex-col overflow-hidden bg-[rgba(10,8,7,1)] lg:flex print:hidden">
       <div className="border-b border-white/10 px-4 py-4">
-        <Link to="/app" className="inline-flex rounded-lg bg-[#f7f3ec] px-2.5 py-2">
-          <img src="/website-images/logo.png" alt="Dinevoro" className="h-6 w-auto" />
+        <Link to="/app" className="inline-flex items-center px-1">
+          <img src="/sidebar-logo.png" alt="Dinevoro" className="h-7 w-auto max-w-[160px] object-contain" />
         </Link>
         <p className="mt-2 truncate px-0.5 text-[10px] text-white/45">{restaurant?.name ?? "Your Restaurant"}</p>
       </div>

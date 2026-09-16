@@ -8,7 +8,11 @@ const restaurantSchema = new Schema(
     phone: { type: String, required: true },
     gstin: { type: String, default: "" },
     owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    plan: { type: String, enum: ["Basic", "Standard", "Premium"], default: "Standard" },
+    plan: {
+      type: String,
+      enum: ["Basic", "Standard", "Premium", "Classic", "Advanced"],
+      default: "Standard",
+    },
     billingCycle: { type: String, enum: ["Monthly", "Annual"], default: "Monthly" },
     trialEndsAt: { type: Date, required: true },
 
@@ -31,6 +35,17 @@ const restaurantSchema = new Schema(
     invoiceTerms: { type: String, default: "" },
     showLogoOnInvoice: { type: Boolean, default: true },
     digitalSignature: { type: Boolean, default: false },
+
+    tenantStatus: {
+      type: String,
+      enum: ["Active", "Trial", "Inactive"],
+      default: "Active",
+    },
+    enabledModules: {
+      type: [String],
+      default: () => ["Operations", "Billing", "Menu"],
+    },
+    tenantCode: { type: String, default: "" },
   },
   { timestamps: true },
 );

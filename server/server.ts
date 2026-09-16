@@ -45,6 +45,16 @@ import * as accounting from "@/app/api/accounting/route";
 import * as subscription from "@/app/api/subscription/route";
 import * as attendance from "@/app/api/attendance/route";
 import * as attendanceId from "@/app/api/attendance/[id]/route";
+import * as saOverview from "@/app/api/super-admin/overview/route";
+import * as saTenants from "@/app/api/super-admin/tenants/route";
+import * as saTenantId from "@/app/api/super-admin/tenants/[id]/route";
+import * as saPlans from "@/app/api/super-admin/plans/route";
+import * as saPlanId from "@/app/api/super-admin/plans/[id]/route";
+import * as saAnalytics from "@/app/api/super-admin/analytics/route";
+import * as saSupport from "@/app/api/super-admin/support/route";
+import * as saSupportId from "@/app/api/super-admin/support/[id]/route";
+import * as saSettings from "@/app/api/super-admin/settings/route";
+import * as saPassword from "@/app/api/super-admin/settings/password/route";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -198,6 +208,40 @@ mountRoute(app, "get", "/api/attendance", attendance.GET);
 mountRoute(app, "post", "/api/attendance", attendance.POST);
 mountRoute(app, "options", "/api/attendance/:id", attendanceId.OPTIONS);
 mountRoute(app, "patch", "/api/attendance/:id", attendanceId.PATCH, true);
+
+mountRoute(app, "options", "/api/super-admin/overview", saOverview.OPTIONS);
+mountRoute(app, "get", "/api/super-admin/overview", saOverview.GET);
+
+mountRoute(app, "options", "/api/super-admin/tenants", saTenants.OPTIONS);
+mountRoute(app, "get", "/api/super-admin/tenants", saTenants.GET);
+
+mountRoute(app, "options", "/api/super-admin/tenants/:id", saTenantId.OPTIONS);
+mountRoute(app, "get", "/api/super-admin/tenants/:id", saTenantId.GET, true);
+mountRoute(app, "patch", "/api/super-admin/tenants/:id", saTenantId.PATCH, true);
+
+mountRoute(app, "options", "/api/super-admin/plans", saPlans.OPTIONS);
+mountRoute(app, "get", "/api/super-admin/plans", saPlans.GET);
+mountRoute(app, "post", "/api/super-admin/plans", saPlans.POST);
+
+mountRoute(app, "options", "/api/super-admin/plans/:id", saPlanId.OPTIONS);
+mountRoute(app, "patch", "/api/super-admin/plans/:id", saPlanId.PATCH, true);
+
+mountRoute(app, "options", "/api/super-admin/analytics", saAnalytics.OPTIONS);
+mountRoute(app, "get", "/api/super-admin/analytics", saAnalytics.GET);
+
+mountRoute(app, "options", "/api/super-admin/support", saSupport.OPTIONS);
+mountRoute(app, "get", "/api/super-admin/support", saSupport.GET);
+mountRoute(app, "post", "/api/super-admin/support", saSupport.POST);
+
+mountRoute(app, "options", "/api/super-admin/support/:id", saSupportId.OPTIONS);
+mountRoute(app, "patch", "/api/super-admin/support/:id", saSupportId.PATCH, true);
+
+mountRoute(app, "options", "/api/super-admin/settings", saSettings.OPTIONS);
+mountRoute(app, "get", "/api/super-admin/settings", saSettings.GET);
+mountRoute(app, "patch", "/api/super-admin/settings", saSettings.PATCH);
+
+mountRoute(app, "options", "/api/super-admin/settings/password", saPassword.OPTIONS);
+mountRoute(app, "post", "/api/super-admin/settings/password", saPassword.POST);
 
 app.listen(port, () => {
   console.log(`HotelLite API listening on port ${port}`);

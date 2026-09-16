@@ -35,7 +35,7 @@ export default function DashboardLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-surface print:h-auto print:overflow-visible">
       <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden print:overflow-visible">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden print:overflow-visible lg:ml-56">
         <Topbar title={meta.title} subtitle={meta.subtitle} greeting={isDashboard} />
         <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 print:overflow-visible print:p-0">
           <Outlet />

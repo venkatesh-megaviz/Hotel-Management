@@ -5,7 +5,11 @@ const userSchema = new Schema(
     fullName: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
-    role: { type: String, enum: ["Owner", "Manager", "Cashier", "Kitchen Staff"], default: "Owner" },
+    role: {
+      type: String,
+      enum: ["Owner", "Manager", "Cashier", "Kitchen Staff", "SuperAdmin"],
+      default: "Owner",
+    },
     restaurant: { type: Schema.Types.ObjectId, ref: "Restaurant" },
   },
   { timestamps: true },
