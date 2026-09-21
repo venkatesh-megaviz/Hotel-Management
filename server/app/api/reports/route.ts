@@ -77,24 +77,25 @@ export async function GET(request: Request) {
     MenuItem.find({ restaurant }),
   ]);
 
-  const revenue = orders.reduce((sum, o) => sum + o.total, 0) || 194750;
-  const expenseTotal = expenses.reduce((sum, e) => sum + e.amount, 0) || 31000;
-  const avgBill = orders.length ? revenue / orders.length : 379;
-  const prevRevenue = prevOrders.reduce((sum, o) => sum + o.total, 0);
-  const revenueChange = prevRevenue ? Math.round(((revenue - prevRevenue) / prevRevenue) * 100) : 11;
-  const orderChange = prevOrders.length ? Math.round(((orders.length - prevOrders.length) / prevOrders.length) * 100) : 8;
+  const paidOrders = orders.filter((o) => o.status === "Paid");
+  const revenue = paidOrders.reduce((sum, o) => sum + o.total, 0);
+  const expenseTotal = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const avgBill = paidOrders.length ? revenue / paidOrders.length : 0;
+  const prevPaid = prevOrders.filter((o) => o.status === "Paid");
+  const prevRevenue = prevPaid.reduce((sum, o) => sum + o.total, 0);
+  const revenueChange = prevRevenue ? Math.round(((revenue - prevRevenue) / prevRevenue) * 100) : revenue > 0 ? 100 : 0;
+  const orderChange = prevPaid.length ? Math.round(((paidOrders.length - prevPaid.length) / prevPaid.length) * 100) : paidOrders.length > 0 ? 100 : 0;
 
   const salesTrend = Array.from({ length: Math.min(days, 7) }, (_, i) => {
     const day = daysAgo(Math.min(days, 7) - 1 - i);
     const dayStart = startOfDay(day);
     const dayEnd = endOfDay(day);
-    const dayRevenue = orders
+    const dayRevenue = paidOrders
       .filter((o) => o.createdAt >= dayStart && o.createdAt <= dayEnd)
       .reduce((sum, o) => sum + o.total, 0);
-    const demo = [72000, 85000, 68000, 91000, 88000, 95000, 78000];
     return {
       label: day.toLocaleDateString("en-US", { weekday: "short" }),
-      revenue: dayRevenue || demo[i] || 80000,
+      revenue: dayRevenue,
     };
   });
 
@@ -106,27 +107,18 @@ export async function GET(request: Request) {
     }, {}),
   );
 
-  const defaultExpenses = [
-    { name: "Raw Materials", value: 10500 },
-    { name: "Payroll", value: 8000 },
-    { name: "Utilities", value: 7000 },
-    { name: "Fuel", value: 1800 },
-    { name: "Operations", value: 1200 },
-    { name: "Maintenance", value: 2500 },
-  ];
-
   const base = {
     range,
     tab,
     revenue,
     revenueChange,
-    orders: orders.length || 1156,
+    orders: paidOrders.length,
     orderChange,
     expenses: expenseTotal,
-    expenseEntries: expenses.length || 18,
+    expenseEntries: expenses.length,
     avgBill,
     salesTrend,
-    expenseByCategory: expenseByCategory.length ? expenseByCategory : defaultExpenses,
+    expenseByCategory,
     stockInEntries: stockEntries.slice(0, 10).map((s) => ({
       id: s._id.toString(),
       item: s.item,

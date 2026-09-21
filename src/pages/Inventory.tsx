@@ -11,6 +11,7 @@ export default function Inventory() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [editForm, setEditForm] = useState({ quantity: "", reorderLevel: "" });
   const [savingEdit, setSavingEdit] = useState(false);
@@ -29,17 +30,25 @@ export default function Inventory() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
+    const quantity = Number(form.quantity);
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      setFormError("Quantity must be greater than 0");
+      return;
+    }
     setSubmitting(true);
     try {
       await createStockEntry({
         item: form.item,
-        quantity: Number(form.quantity),
+        quantity,
         unit: form.unit,
         supplier: form.supplier,
         cost: Number(form.cost || 0),
       });
       setForm(emptyForm);
       load();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Could not add stock");
     } finally {
       setSubmitting(false);
     }
@@ -98,10 +107,14 @@ export default function Inventory() {
                 <input
                   type="number"
                   required
-                  min={0}
+                  min={0.01}
+                  step="any"
                   placeholder="0"
                   value={form.quantity}
-                  onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
+                  onChange={(e) => {
+                    setFormError(null);
+                    setForm((f) => ({ ...f, quantity: e.target.value }));
+                  }}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                 />
               </div>
@@ -149,6 +162,7 @@ export default function Inventory() {
               <Plus size={16} />
               {submitting ? "Adding…" : "Add to Stock"}
             </button>
+            {formError && <p className="text-sm text-red-600">{formError}</p>}
           </form>
         </div>
 

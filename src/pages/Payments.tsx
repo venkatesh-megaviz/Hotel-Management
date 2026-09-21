@@ -5,7 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/StatCard";
 import StatusBadge from "@/components/StatusBadge";
 import { Toast, useToast } from "@/components/Toast";
-import { fetchOrders, updateOrderStatus, createOrder, ApiError, type Order } from "@/lib/api";
+import { fetchOrders, updateOrder, updateOrderStatus, ApiError, type Order } from "@/lib/api";
 
 const historyFilters = ["All", "Paid", "Pending", "Refunded"] as const;
 const tabs = ["History", "Record Payment", "Pending"] as const;
@@ -66,21 +66,37 @@ export default function Payments() {
 
   async function handleRecordPayment(e: React.FormEvent) {
     e.preventDefault();
+    const billNo = form.billNumber.trim().replace(/^#/, "");
+    const amount = Number(form.amount);
+
+    if (!billNo) {
+      showToast("error", "Enter an existing bill number");
+      return;
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showToast("error", "Amount must be greater than 0");
+      return;
+    }
+
+    const existing = orders.find((o) => String(o.billNo) === billNo);
+    if (!existing) {
+      showToast("error", `Bill #${billNo} was not found. Enter a valid bill number.`);
+      return;
+    }
+    if (existing.status === "Paid") {
+      showToast("error", `Bill #${billNo} is already paid`);
+      return;
+    }
+    if (existing.status === "Refunded") {
+      showToast("error", `Bill #${billNo} was refunded and cannot be collected`);
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const amount = Number(form.amount) || 0;
-      const createdAt = form.date ? new Date(`${form.date}T${form.time || "12:00"}`).toISOString() : undefined;
-      const res = await createOrder({
-        tableOrNo: form.billNumber,
-        customerName: form.customerTable || "Walk-in",
-        items: [{ name: form.notes || "Manual Entry", price: amount, gst: 0, qty: 1 }],
-        mode: form.mode,
-        status: "Paid",
-        notes: form.notes,
-        createdAt,
-      });
-      setOrders((prev) => [res.order, ...prev]);
-      showToast("success", "Payment recorded successfully");
+      const res = await updateOrder(existing.id, { status: "Paid", mode: form.mode });
+      setOrders((prev) => prev.map((o) => (o.id === existing.id ? res.order : o)));
+      showToast("success", `Payment recorded for bill #${existing.billNo}`);
       setForm(emptyForm);
       setTab("History");
     } catch (err) {

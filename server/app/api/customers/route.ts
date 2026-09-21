@@ -35,6 +35,14 @@ export async function POST(request: Request) {
     }
 
     await connectToDatabase();
+    const duplicatePhone = await Customer.findOne({
+      restaurant: auth.restaurantId,
+      phone: parsed.data.phone,
+    });
+    if (duplicatePhone) {
+      return withCors(request, jsonResponse({ error: "A customer with this phone number already exists" }, 400));
+    }
+
     const customer = await Customer.create({ ...parsed.data, restaurant: auth.restaurantId });
 
     await notify({

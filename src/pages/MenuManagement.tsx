@@ -97,7 +97,18 @@ export default function MenuManagement() {
       return;
     }
     if (!form.price || form.price <= 0) {
-      setError("Enter a valid price");
+      setError("Price must be greater than 0");
+      return;
+    }
+    if (form.gst < 0 || form.gst > 28) {
+      setError("GST must be between 0% and 28%");
+      return;
+    }
+    const duplicate = items.find(
+      (i) => i.id !== editingId && i.name.trim().toLowerCase() === form.name.trim().toLowerCase(),
+    );
+    if (duplicate) {
+      setError("A menu item with this name already exists");
       return;
     }
 
@@ -123,6 +134,7 @@ export default function MenuManagement() {
   const availableCount = items.filter((i) => i.available).length;
   const offCount = items.length - availableCount;
   const isEditing = Boolean(editingId);
+  const hasActiveSearch = Boolean(search.trim()) || activeCategory !== "All";
 
   if (view === "form") {
     return (
@@ -191,10 +203,11 @@ export default function MenuManagement() {
                 label="GST Rate (%)"
                 type="number"
                 value={String(form.gst)}
-                onChange={(v) => setForm((f) => ({ ...f, gst: Number(v) || 0 }))}
+                onChange={(v) => setForm((f) => ({ ...f, gst: Math.min(28, Math.max(0, Number(v) || 0)) }))}
                 placeholder="5"
               />
             </div>
+            <p className="-mt-2 text-xs text-slate-400">Allowed GST slabs: 0–28%</p>
 
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input
@@ -231,10 +244,20 @@ export default function MenuManagement() {
   return (
     <div>
       <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard data={{ label: "Total Items", value: `${items.length}`, helpText: "in menu", icon: "BookOpen", accent: "brand" }} />
-        <StatCard data={{ label: "Available", value: `${availableCount}`, helpText: "Active now", icon: "CheckCircle2", accent: "success" }} />
-        <StatCard data={{ label: "Off Menu", value: `${offCount}`, helpText: "Hidden from billing", icon: "XCircle", accent: "danger" }} />
-        <StatCard data={{ label: "Categories", value: `${categories.length - 1}`, helpText: "Menu sections", icon: "Hash", accent: "warning" }} />
+        {loading ? (
+          <>
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="card h-24 animate-pulse bg-slate-100" />
+            ))}
+          </>
+        ) : (
+          <>
+            <StatCard data={{ label: "Total Items", value: `${items.length}`, helpText: "in menu", icon: "BookOpen", accent: "brand" }} />
+            <StatCard data={{ label: "Available", value: `${availableCount}`, helpText: "Active now", icon: "CheckCircle2", accent: "success" }} />
+            <StatCard data={{ label: "Off Menu", value: `${offCount}`, helpText: "Hidden from billing", icon: "XCircle", accent: "danger" }} />
+            <StatCard data={{ label: "Categories", value: `${categories.length - 1}`, helpText: "Menu sections", icon: "Hash", accent: "warning" }} />
+          </>
+        )}
       </div>
 
       <PageHeader
@@ -279,13 +302,15 @@ export default function MenuManagement() {
         {loading ? (
           <p className="p-8 text-center text-sm text-slate-400">Loading menu…</p>
         ) : filtered.length === 0 ? (
-          <p className="p-8 text-center text-sm text-slate-400">No menu items yet. Add your first item.</p>
+          <p className="p-8 text-center text-sm text-slate-400">
+            {hasActiveSearch ? "No items match your search." : "No menu items yet. Add your first item."}
+          </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full table-fixed text-left text-sm">
               <thead className="bg-slate-50">
                 <tr className="text-xs uppercase tracking-wide text-slate-400">
-                  <th className="px-5 py-3 font-medium">Item</th>
+                  <th className="w-[28%] px-5 py-3 font-medium">Item</th>
                   <th className="px-5 py-3 font-medium">Category</th>
                   <th className="px-5 py-3 font-medium">Price</th>
                   <th className="px-5 py-3 font-medium">GST</th>
@@ -297,7 +322,9 @@ export default function MenuManagement() {
               <tbody className="divide-y divide-slate-50">
                 {filtered.map((item) => (
                   <tr key={item.id}>
-                    <td className="px-5 py-3 font-medium text-slate-800">{item.name}</td>
+                    <td className="max-w-0 truncate px-5 py-3 font-medium text-slate-800" title={item.name}>
+                      {item.name}
+                    </td>
                     <td className="px-5 py-3 text-slate-500">{item.category}</td>
                     <td className="px-5 py-3 text-slate-700">₹{item.price}</td>
                     <td className="px-5 py-3 text-slate-500">{item.gst}%</td>

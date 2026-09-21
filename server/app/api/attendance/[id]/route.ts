@@ -29,13 +29,24 @@ async function syncAttendanceDay(restaurantId: string) {
 }
 
 function formatTime(date: Date) {
-  return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return date.toLocaleTimeString("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  });
 }
 
 function isLate(date: Date) {
-  const cutoff = new Date(date);
-  cutoff.setHours(8, 15, 0, 0);
-  return date > cutoff;
+  const parts = new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false,
+  }).formatToParts(date);
+  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
+  const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
+  return hour > 8 || (hour === 8 && minute > 15);
 }
 
 export async function OPTIONS(request: Request) {

@@ -63,6 +63,10 @@ export default function Customers() {
       setFormError("Enter a valid 10-digit mobile number");
       return;
     }
+    if (customers.some((c) => c.phone === phone)) {
+      setFormError("A customer with this phone number already exists");
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await createCustomer({ ...form, phone });
@@ -138,10 +142,20 @@ export default function Customers() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard data={{ label: "Total Customers", value: `${customers.length}`, helpText: "All time", icon: "Users", accent: "brand" }} />
-        <StatCard data={{ label: "Total Revenue", value: `₹${totalRevenue.toLocaleString()}`, helpText: "All customers", icon: "TrendingUp", accent: "success" }} />
-        <StatCard data={{ label: "Avg. Visits", value: `${avgVisits}`, helpText: "Per customer", icon: "RotateCcw", accent: "warning" }} />
-        <StatCard data={{ label: "New This Month", value: `${newThisMonth}`, helpText: "Since 1st", icon: "UserPlus", accent: "danger" }} />
+        {loading ? (
+          <>
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="card h-24 animate-pulse bg-slate-100" />
+            ))}
+          </>
+        ) : (
+          <>
+            <StatCard data={{ label: "Total Customers", value: `${customers.length}`, helpText: "All time", icon: "Users", accent: "brand" }} />
+            <StatCard data={{ label: "Total Revenue", value: `₹${totalRevenue.toLocaleString()}`, helpText: "All customers", icon: "TrendingUp", accent: "success" }} />
+            <StatCard data={{ label: "Avg. Visits", value: `${avgVisits}`, helpText: "Per customer", icon: "RotateCcw", accent: "warning" }} />
+            <StatCard data={{ label: "New This Month", value: `${newThisMonth}`, helpText: "Since 1st", icon: "UserPlus", accent: "danger" }} />
+          </>
+        )}
       </div>
 
       <PageHeader title="Customer Management" subtitle="Customer profiles and order history" />

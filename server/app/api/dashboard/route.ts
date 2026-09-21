@@ -39,7 +39,7 @@ export async function GET(request: Request) {
       Order.find({ restaurant, createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd }, status: { $ne: "Refunded" } }),
       Expense.find({ restaurant, createdAt: { $gte: todayStart, $lte: todayEnd } }),
       InventoryItem.find({ restaurant, $expr: { $lte: ["$quantity", "$reorderLevel"] } }).limit(5),
-      Order.find({ restaurant, createdAt: { $gte: startOfDay(daysAgo(6)) }, status: { $ne: "Refunded" } }),
+      Order.find({ restaurant, createdAt: { $gte: startOfDay(daysAgo(6)) }, status: "Paid" }),
       Order.find({ restaurant }).sort({ createdAt: -1 }).limit(6),
       Table.find({ restaurant }),
       Order.find({
@@ -66,15 +66,17 @@ export async function GET(request: Request) {
       }),
     ]);
 
-  const todayRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0) || 28450;
-  const yesterdayRevenue = yesterdayOrders.reduce((sum, o) => sum + o.total, 0);
+  const todayPaid = todayOrders.filter((o) => o.status === "Paid");
+  const yesterdayPaid = yesterdayOrders.filter((o) => o.status === "Paid");
+  const todayRevenue = todayPaid.reduce((sum, o) => sum + o.total, 0);
+  const yesterdayRevenue = yesterdayPaid.reduce((sum, o) => sum + o.total, 0);
   const revenueChange =
-    yesterdayRevenue > 0 ? Math.round(((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100) : 15;
+    yesterdayRevenue > 0 ? Math.round(((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100) : todayRevenue > 0 ? 100 : 0;
 
-  const todayExpenseTotal = todayExpenses.reduce((sum, e) => sum + e.amount, 0) || 5000;
+  const todayExpenseTotal = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
   const pendingOrders = todayOrders.filter((o) => o.status === "Pending");
-  const todayOrdersCount = todayOrders.length || 167;
-  const pendingCount = pendingOrders.length || 12;
+  const todayOrdersCount = todayPaid.length;
+  const pendingCount = pendingOrders.length;
 
   const weeklyRevenue = Array.from({ length: 7 }, (_, i) => {
     const day = daysAgo(6 - i);
@@ -83,54 +85,37 @@ export async function GET(request: Request) {
     const revenue = weekOrders
       .filter((o) => o.createdAt >= dayStart && o.createdAt <= dayEnd)
       .reduce((sum, o) => sum + o.total, 0);
-    const demo = [18200, 22400, 19800, 25600, 23100, 27800, 28450];
-    return { day: DAY_LABELS[day.getDay()], revenue: revenue || demo[i] };
+    return { day: DAY_LABELS[day.getDay()], revenue };
   });
 
-  const stockItems =
-    lowStockItems.length > 0
-      ? lowStockItems.map((item) => ({
-          id: item._id.toString(),
-          name: item.name,
-          quantity: item.quantity,
-          unit: item.unit,
-          reorderLevel: item.reorderLevel,
-          severity: item.quantity <= item.reorderLevel / 2 ? "Critical" : "Low",
-        }))
-      : [
-          { id: "1", name: "Whole Chicken", quantity: 3, unit: "kg", reorderLevel: 5, severity: "Low" },
-          { id: "2", name: "Mutton", quantity: 2, unit: "kg", reorderLevel: 4, severity: "Critical" },
-          { id: "3", name: "Cooking Oil", quantity: 8, unit: "L", reorderLevel: 3, severity: "Low" },
-        ];
+  const stockItems = lowStockItems.map((item) => ({
+    id: item._id.toString(),
+    name: item.name,
+    quantity: item.quantity,
+    unit: item.unit,
+    reorderLevel: item.reorderLevel,
+    severity: item.quantity <= item.reorderLevel / 2 ? "Critical" : "Low",
+  }));
 
-  const bills =
-    recentOrders.length > 0
-      ? recentOrders.map((o) => ({
-          id: o._id.toString(),
-          billNo: o.billNo,
-          customerName: o.customerName,
-          tableOrNo: o.tableOrNo,
-          total: o.total,
-          status: o.status,
-          createdAt: o.createdAt,
-        }))
-      : [
-          { id: "1", billNo: 1089, customerName: "Table Guest", tableOrNo: "T-02", total: 460, status: "Pending", createdAt: new Date() },
-          { id: "2", billNo: 1088, customerName: "Walk-in", tableOrNo: "T-05", total: 320, status: "Paid", createdAt: new Date(Date.now() - 3600000) },
-          { id: "3", billNo: 1087, customerName: "Table Guest", tableOrNo: "T-07", total: 780, status: "Pending", createdAt: new Date(Date.now() - 7200000) },
-        ];
+  const bills = recentOrders.map((o) => ({
+    id: o._id.toString(),
+    billNo: o.billNo,
+    customerName: o.customerName,
+    tableOrNo: o.tableOrNo,
+    total: o.total,
+    status: o.status,
+    createdAt: o.createdAt,
+  }));
 
-  const expensesList =
-    todayExpenses.length > 0
-      ? todayExpenses.map((e) => ({ id: e._id.toString(), description: e.description, amount: e.amount }))
-      : [
-          { id: "1", description: "Vegetables Purchase", amount: 3200 },
-          { id: "2", description: "LPG Cylinders x2", amount: 1800 },
-        ];
+  const expensesList = todayExpenses.map((e) => ({
+    id: e._id.toString(),
+    description: e.description,
+    amount: e.amount,
+  }));
 
-  const activeTables = tables.filter((t) => t.status === "Occupied" || t.status === "Billing").length || 7;
-  const totalTables = tables.length || 12;
-  const availableTables = tables.filter((t) => t.status === "Available").length || 5;
+  const activeTables = tables.filter((t) => t.status === "Occupied" || t.status === "Billing").length;
+  const totalTables = tables.length;
+  const availableTables = tables.filter((t) => t.status === "Available").length;
 
   return withCors(
     request,
@@ -146,12 +131,12 @@ export async function GET(request: Request) {
         activeTables,
         totalTables,
         availableTables,
-        kitchenQueue: kitchenOrders.length || 4,
-        kitchenNew: kitchenOrders.filter((o) => o.kitchenStatus === "New").length || 2,
-        kitchenPreparing: kitchenOrders.filter((o) => o.kitchenStatus === "Preparing").length || 2,
-        onlineOrders: onlinePending.length || 3,
-        activeDeliveries: activeDeliveries.length || 2,
-        pendingAssign: unassignedDeliveries.length || 1,
+        kitchenQueue: kitchenOrders.length,
+        kitchenNew: kitchenOrders.filter((o) => o.kitchenStatus === "New").length,
+        kitchenPreparing: kitchenOrders.filter((o) => o.kitchenStatus === "Preparing").length,
+        onlineOrders: onlinePending.length,
+        activeDeliveries: activeDeliveries.length,
+        pendingAssign: unassignedDeliveries.length,
       },
       stockAlertItems: stockItems,
       recentBills: bills,

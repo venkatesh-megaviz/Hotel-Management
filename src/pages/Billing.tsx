@@ -231,7 +231,7 @@ export default function Billing() {
                           </span>
                         )}
                       </span>
-                      <span className="mt-1 text-sm font-semibold text-slate-900">{item.name}</span>
+                      <span className="mt-1 line-clamp-2 w-full break-words text-sm font-semibold text-slate-900">{item.name}</span>
                       <span className="mt-2 text-sm font-bold text-brand-600">₹{item.price}</span>
                       <span className="text-xs text-slate-400">GST {item.gst}%</span>
                     </button>
@@ -452,10 +452,12 @@ function isToday(iso: string) {
 function BillHistory({ orders, loading }: { orders: Order[]; loading: boolean }) {
   const { restaurant } = useAuth();
 
-  const todaysOrders = useMemo(() => orders.filter((o) => isToday(o.createdAt) && o.status !== "Refunded"), [orders]);
-  const todaysRevenue = todaysOrders.reduce((sum, o) => sum + o.total, 0);
-  const nonRefunded = orders.filter((o) => o.status !== "Refunded");
-  const avgBill = nonRefunded.length ? nonRefunded.reduce((sum, o) => sum + o.total, 0) / nonRefunded.length : 0;
+  const todaysPaid = useMemo(
+    () => orders.filter((o) => isToday(o.createdAt) && o.status === "Paid"),
+    [orders],
+  );
+  const todaysRevenue = todaysPaid.reduce((sum, o) => sum + o.total, 0);
+  const avgBill = todaysPaid.length ? todaysRevenue / todaysPaid.length : 0;
   const pendingOrders = orders.filter((o) => o.status === "Pending");
   const pendingTotal = pendingOrders.reduce((sum, o) => sum + o.total, 0);
 
@@ -463,11 +465,11 @@ function BillHistory({ orders, loading }: { orders: Order[]; loading: boolean })
     const header = ["Bill No", "Date & Time", "Customer", "Items", "Amount", "Mode", "Status"];
     const rows = orders.map((o) => [
       o.billNo,
-      new Date(o.createdAt).toLocaleString("en-US"),
+      new Date(o.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
       o.tableOrNo || o.customerName,
       o.items.length,
       o.total.toFixed(0),
-      o.mode,
+      o.status === "Pending" ? "—" : o.mode,
       o.status,
     ]);
     const csv = [header, ...rows].map((row) => row.join(",")).join("\n");
@@ -481,9 +483,9 @@ function BillHistory({ orders, loading }: { orders: Order[]; loading: boolean })
   return (
     <div>
       <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard data={{ label: "Today's Bills", value: `${todaysOrders.length}`, helpText: "Completed", icon: "FileText", accent: "brand" }} />
-        <StatCard data={{ label: "Revenue", value: `₹${todaysRevenue.toLocaleString()}`, helpText: "Today", icon: "TrendingUp", accent: "success" }} />
-        <StatCard data={{ label: "Avg. Bill", value: `₹${avgBill.toFixed(0)}`, helpText: "Per order", icon: "Hash", accent: "brand" }} />
+        <StatCard data={{ label: "Today's Bills", value: `${todaysPaid.length}`, helpText: "Completed", icon: "FileText", accent: "brand" }} />
+        <StatCard data={{ label: "Revenue", value: `₹${todaysRevenue.toLocaleString()}`, helpText: "Today (paid)", icon: "TrendingUp", accent: "success" }} />
+        <StatCard data={{ label: "Avg. Bill", value: `₹${avgBill.toFixed(0)}`, helpText: "Today's paid", icon: "Hash", accent: "brand" }} />
         <StatCard
           data={{ label: "Pending", value: `₹${pendingTotal.toLocaleString()}`, helpText: `${pendingOrders.length} bills`, icon: "AlertTriangle", accent: "warning" }}
         />
@@ -516,6 +518,7 @@ function BillHistory({ orders, loading }: { orders: Order[]; loading: boolean })
                   <th className="px-5 py-3 font-medium">Items</th>
                   <th className="px-5 py-3 font-medium">Amount</th>
                   <th className="px-5 py-3 font-medium">Mode</th>
+                  <th className="px-5 py-3 font-medium">Status</th>
                   <th className="px-5 py-3" />
                 </tr>
               </thead>
@@ -524,12 +527,34 @@ function BillHistory({ orders, loading }: { orders: Order[]; loading: boolean })
                   <tr key={o.id}>
                     <td className="px-5 py-3 font-medium text-slate-800">#{o.billNo}</td>
                     <td className="px-5 py-3 text-slate-500">
-                      {new Date(o.createdAt).toLocaleString("en-US", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
+                      {new Date(o.createdAt).toLocaleString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        timeZone: "Asia/Kolkata",
+                      })}
                     </td>
-                    <td className="px-5 py-3 text-slate-600">{o.tableOrNo || o.customerName}</td>
+                    <td className="max-w-[160px] truncate px-5 py-3 text-slate-600" title={o.tableOrNo || o.customerName}>
+                      {o.tableOrNo || o.customerName}
+                    </td>
                     <td className="px-5 py-3 text-slate-500">{o.items.length} items</td>
                     <td className="px-5 py-3 font-semibold text-slate-800">₹{o.total.toFixed(0)}</td>
-                    <td className={clsx("px-5 py-3 font-medium", modeColor[o.mode])}>{o.mode}</td>
+                    <td className={clsx("px-5 py-3 font-medium", o.status === "Pending" ? "text-slate-400" : modeColor[o.mode])}>
+                      {o.status === "Pending" ? "—" : o.mode}
+                    </td>
+                    <td className="px-5 py-3">
+                      <span
+                        className={clsx(
+                          "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                          o.status === "Paid" && "bg-emerald-50 text-emerald-700",
+                          o.status === "Pending" && "bg-orange-50 text-orange-700",
+                          o.status === "Refunded" && "bg-red-50 text-red-600",
+                        )}
+                      >
+                        {o.status}
+                      </span>
+                    </td>
                     <td className="px-5 py-3">
                       <div className="flex justify-end gap-1">
                         <Link

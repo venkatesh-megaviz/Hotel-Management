@@ -115,6 +115,11 @@ export default function Expenses() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const amount = Number(form.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showToast("error", "Amount must be greater than 0");
+      return;
+    }
     setSubmitting(true);
     try {
       const createdAt = form.date ? new Date(`${form.date}T12:00`).toISOString() : undefined;
@@ -122,7 +127,7 @@ export default function Expenses() {
         description: form.description,
         category: form.category,
         paymentMode: form.paymentMode,
-        amount: Number(form.amount),
+        amount,
         hasBill: !!form.billUrl,
         billUrl: form.billUrl,
         createdAt,
@@ -148,6 +153,7 @@ export default function Expenses() {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm("Delete this expense?")) return;
     await deleteExpense(id);
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   }

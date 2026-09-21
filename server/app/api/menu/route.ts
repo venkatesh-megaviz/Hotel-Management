@@ -34,6 +34,14 @@ export async function POST(request: Request) {
     }
 
     await connectToDatabase();
+    const duplicate = await MenuItem.findOne({
+      restaurant: auth.restaurantId,
+      name: new RegExp(`^${parsed.data.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+    });
+    if (duplicate) {
+      return withCors(request, jsonResponse({ error: "A menu item with this name already exists" }, 400));
+    }
+
     const item = await MenuItem.create({ ...parsed.data, restaurant: auth.restaurantId });
 
     return withCors(request, jsonResponse({ item: serializeMenuItem(item) }, 201));

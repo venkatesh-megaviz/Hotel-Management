@@ -23,6 +23,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     await connectToDatabase();
+
+    if (parsed.data.name) {
+      const duplicate = await MenuItem.findOne({
+        restaurant: auth.restaurantId,
+        _id: { $ne: id },
+        name: new RegExp(`^${parsed.data.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+      });
+      if (duplicate) {
+        return withCors(request, jsonResponse({ error: "A menu item with this name already exists" }, 400));
+      }
+    }
+
     const item = await MenuItem.findOneAndUpdate({ _id: id, restaurant: auth.restaurantId }, parsed.data, { new: true });
     if (!item) {
       return withCors(request, jsonResponse({ error: "Item not found" }, 404));

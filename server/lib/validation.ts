@@ -21,13 +21,21 @@ export const loginSchema = z.object({
 export const menuItemSchema = z.object({
   name: z.string().trim().min(1, "Item name is required"),
   category: z.string().trim().min(1, "Category is required"),
-  price: z.coerce.number().min(0, "Price must be positive"),
-  gst: z.coerce.number().min(0).default(5),
+  price: z.coerce.number().positive("Price must be greater than 0"),
+  gst: z.coerce.number().min(0, "GST cannot be negative").max(28, "GST must be between 0 and 28%").default(5),
   foodType: z.enum(["Veg", "Non-Veg"]).default("Veg"),
   available: z.coerce.boolean().default(true),
 });
 
-export const menuItemUpdateSchema = menuItemSchema.partial();
+/** Partial update must NOT re-apply defaults (e.g. gst:5) when fields are omitted. */
+export const menuItemUpdateSchema = z.object({
+  name: z.string().trim().min(1, "Item name is required").optional(),
+  category: z.string().trim().min(1, "Category is required").optional(),
+  price: z.coerce.number().positive("Price must be greater than 0").optional(),
+  gst: z.coerce.number().min(0, "GST cannot be negative").max(28, "GST must be between 0 and 28%").optional(),
+  foodType: z.enum(["Veg", "Non-Veg"]).optional(),
+  available: z.coerce.boolean().optional(),
+});
 
 const orderLineInput = z.object({
   menuItemId: z.string().optional(),
@@ -123,7 +131,7 @@ export const expenseSchema = z.object({
   paymentMode: z.enum(["Cash", "UPI", "Card", "Online", "Bank Transfer"]).default("Cash"),
   hasBill: z.coerce.boolean().default(false),
   billUrl: z.string().trim().optional().default(""),
-  amount: z.coerce.number().min(0, "Amount must be positive"),
+  amount: z.coerce.number().positive("Amount must be greater than 0"),
   createdAt: z.string().trim().optional(),
 });
 
