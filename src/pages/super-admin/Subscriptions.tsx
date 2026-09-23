@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, Plus, X } from "lucide-react";
 import clsx from "clsx";
-import { fetchSaPlans, updateSaPlan, type SaPlan } from "@/lib/api";
+import { ApiError, createSaPlan, fetchSaPlans, updateSaPlan, type SaPlan } from "@/lib/api";
 
 type PlanDraft = {
-  id: string;
+  id: string | null;
   name: string;
   price: string;
   status: "ACTIVE" | "COMING SOON";
@@ -36,6 +36,15 @@ const PLAN_ACCENT: Record<string, string> = {
 
 const FEATURE_PREVIEW = 5;
 
+const EMPTY_PLAN: PlanDraft = {
+  id: null,
+  name: "",
+  price: "",
+  status: "ACTIVE",
+  featuresText: "",
+  modules: ["Billing", "Menu"],
+};
+
 export default function Subscriptions() {
   const [plans, setPlans] = useState<SaPlan[]>([]);
   const [events, setEvents] = useState<
@@ -44,6 +53,7 @@ export default function Subscriptions() {
   const [editing, setEditing] = useState<PlanDraft | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     fetchSaPlans()
@@ -65,6 +75,7 @@ export default function Subscriptions() {
   }, [editing]);
 
   function openEdit(plan: SaPlan) {
+    setSaveError("");
     setEditing({
       id: plan.id,
       name: plan.name,
@@ -73,6 +84,11 @@ export default function Subscriptions() {
       featuresText: plan.features.join("\n"),
       modules: [...plan.modulesList],
     });
+  }
+
+  function openNew() {
+    setSaveError("");
+    setEditing({ ...EMPTY_PLAN });
   }
 
   function toggleModule(name: string) {
@@ -87,27 +103,42 @@ export default function Subscriptions() {
 
   async function savePlan() {
     if (!editing) return;
+    if (!editing.name.trim()) {
+      setSaveError("Plan name is required");
+      return;
+    }
     setSaving(true);
+    setSaveError("");
     try {
       const features = editing.featuresText
         .split("\n")
         .map((l) => l.trim())
         .filter(Boolean);
-      const res = await updateSaPlan(editing.id, {
-        name: editing.name,
+      const payload = {
+        name: editing.name.trim(),
         price: Number(editing.price) || 0,
         status: editing.status,
         features,
         modules: editing.modules,
-      });
-      setPlans((prev) => prev.map((p) => (p.id === res.plan.id ? res.plan : p)));
+      };
+      if (editing.id) {
+        const res = await updateSaPlan(editing.id, payload);
+        setPlans((prev) => prev.map((p) => (p.id === res.plan.id ? res.plan : p)));
+      } else {
+        const res = await createSaPlan(payload);
+        setPlans((prev) => [...prev, res.plan]);
+      }
       setEditing(null);
+    } catch (err) {
+      setSaveError(err instanceof ApiError ? err.message : "Failed to save plan");
     } finally {
       setSaving(false);
     }
   }
 
   if (loading) return <div className="sa-card">Loading subscriptions…</div>;
+
+  const isNew = editing && !editing.id;
 
   return (
     <div className="sa-stack">
@@ -116,7 +147,7 @@ export default function Subscriptions() {
           <h2>Plan Management</h2>
           <p>{plans.length} active plans · Edit pricing, features, and module access per plan.</p>
         </div>
-        <button type="button" className="sa-btn is-primary is-new-plan">
+        <button type="button" className="sa-btn is-primary is-new-plan" onClick={openNew}>
           <Plus size={15} strokeWidth={2.5} /> New Plan
         </button>
       </div>
@@ -239,8 +270,12 @@ export default function Subscriptions() {
           >
             <div className="sa-modal-head">
               <div>
-                <h2 id="sa-edit-plan-title">Edit Plan</h2>
-                <p>Editing {editing.name} plan — changes apply immediately</p>
+                <h2 id="sa-edit-plan-title">{isNew ? "New Plan" : "Edit Plan"}</h2>
+                <p>
+                  {isNew
+                    ? "Create a plan with pricing, features, and module access"
+                    : `Editing ${editing.name} plan — changes apply immediately`}
+                </p>
               </div>
               <button type="button" className="sa-modal-close" onClick={() => setEditing(null)} aria-label="Close">
                 <X size={16} />
@@ -312,11 +347,12 @@ export default function Subscriptions() {
                   })}
                 </div>
               </div>
+              {saveError && <p className="sa-field-error">{saveError}</p>}
             </div>
 
             <div className="sa-modal-foot">
               <button type="button" className="sa-btn is-primary" disabled={saving} onClick={savePlan}>
-                {saving ? "Saving…" : "Save Changes"}
+                {saving ? "Saving…" : isNew ? "Create Plan" : "Save Changes"}
               </button>
               <button type="button" className="sa-btn is-ghost" onClick={() => setEditing(null)}>
                 Cancel

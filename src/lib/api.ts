@@ -358,6 +358,7 @@ export interface Recipe {
   grossProfit: number;
   margin: number;
   ingredientCount: number;
+  menuItemId?: string | null;
 }
 
 export interface RecipeInput {
@@ -365,6 +366,7 @@ export interface RecipeInput {
   category: string;
   salePrice: number;
   ingredients: RecipeIngredient[];
+  menuItemId?: string;
 }
 
 export function fetchRecipes() {
@@ -804,6 +806,8 @@ export interface SaSupportTicket {
   status: "Open" | "In Progress" | "Resolved";
   priority?: string;
   submitted: string;
+  response?: string;
+  assignedTo?: string;
 }
 
 export interface SaPlatformSettings {
@@ -830,6 +834,7 @@ export function fetchSaOverview() {
       monthlyRevenue: number;
       monthlyRevenueLabel: string;
       retentionRate: number;
+      newThisMonth: number;
     };
     mrrSeries: { month: string; value: number }[];
     moduleAdoption: { name: string; pct: number; color: string }[];
@@ -929,7 +934,10 @@ export function fetchSaSupport() {
   }>("/api/super-admin/support");
 }
 
-export function updateSaSupportTicket(id: string, payload: { status?: string; priority?: string; issue?: string }) {
+export function updateSaSupportTicket(
+  id: string,
+  payload: { status?: string; priority?: string; issue?: string; response?: string; assignedTo?: string },
+) {
   return request<{ ticket: SaSupportTicket }>(`/api/super-admin/support/${id}`, {
     method: "PATCH",
     body: JSON.stringify(payload),

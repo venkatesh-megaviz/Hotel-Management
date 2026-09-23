@@ -10,11 +10,16 @@ export async function OPTIONS(request: Request) {
 }
 
 const updateSchema = z.object({
-  platformName: z.string().trim().min(1).optional(),
-  companyName: z.string().trim().min(1).optional(),
-  supportEmail: z.string().trim().email().optional(),
-  billingContact: z.string().trim().email().optional(),
-  gstNumber: z.string().trim().min(1).optional(),
+  platformName: z.string().trim().min(1, "Platform name is required").optional(),
+  companyName: z.string().trim().min(1, "Company name is required").optional(),
+  supportEmail: z.string().trim().min(1, "Support email is required").email("Enter a valid email address").optional(),
+  billingContact: z
+    .string()
+    .trim()
+    .min(1, "Billing contact is required")
+    .email("Enter a valid billing email")
+    .optional(),
+  gstNumber: z.string().trim().min(1, "GST number is required").optional(),
   notifications: z
     .object({
       newTenantRegistrations: z.boolean().optional(),

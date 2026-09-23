@@ -180,6 +180,7 @@ export const recipeSchema = z.object({
   category: z.string().trim().min(1, "Category is required"),
   salePrice: z.coerce.number().min(0, "Sale price must be positive"),
   ingredients: z.array(recipeIngredientSchema).min(1, "Add at least one ingredient"),
+  menuItemId: z.string().trim().min(1, "Select a menu item for this recipe"),
 });
 
 export const recipeUpdateSchema = recipeSchema.partial();

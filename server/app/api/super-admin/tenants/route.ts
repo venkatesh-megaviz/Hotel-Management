@@ -34,7 +34,9 @@ export async function GET(request: Request) {
           t.name.toLowerCase().includes(q) ||
           t.city.toLowerCase().includes(q) ||
           t.id.toLowerCase().includes(q) ||
-          t.code.toLowerCase().includes(q),
+          t.code.toLowerCase().includes(q) ||
+          t.owner.toLowerCase().includes(q) ||
+          t.email.toLowerCase().includes(q),
       );
     }
 

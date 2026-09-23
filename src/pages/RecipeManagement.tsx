@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import clsx from "clsx";
-import { ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import {
+  fetchMenuItems,
   fetchRecipes,
   createRecipe,
   updateRecipe,
   deleteRecipe,
+  type MenuItem,
   type Recipe,
   type RecipeInput,
   type RecipeIngredient,
@@ -14,46 +16,103 @@ import {
 
 type Tab = "recipes" | "cost" | "add";
 
-const CATEGORIES = ["Starters", "Main Course", "Biryani", "Breads", "Beverages", "Desserts", "Accompaniments"];
-
 const emptyIngredient: RecipeIngredient = { name: "", qty: "", cost: 0 };
 const emptyForm: RecipeInput = {
   name: "",
   category: "Starters",
   salePrice: 0,
   ingredients: [{ ...emptyIngredient }, { ...emptyIngredient }, { ...emptyIngredient }],
+  menuItemId: "",
 };
 
 export default function RecipeManagement() {
   const [tab, setTab] = useState<Tab>("recipes");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [summary, setSummary] = useState({ total: 0, avgMargin: 0, avgCost: 0, avgPrice: 0 });
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [form, setForm] = useState<RecipeInput>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
-    fetchRecipes()
-      .then((res) => {
-        setRecipes(res.recipes);
-        setSummary(res.summary);
+    Promise.all([fetchRecipes(), fetchMenuItems()])
+      .then(([recipeRes, menuRes]) => {
+        setRecipes(recipeRes.recipes);
+        setSummary(recipeRes.summary);
+        setMenuItems(menuRes.items);
       })
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (tab !== "add") load();
+    else {
+      fetchMenuItems().then((res) => setMenuItems(res.items));
+    }
   }, [tab, load]);
+
+  const linkedIds = useMemo(
+    () => new Set(recipes.map((r) => r.menuItemId).filter(Boolean) as string[]),
+    [recipes],
+  );
+
+  const selectableMenu = useMemo(
+    () =>
+      menuItems.filter(
+        (m) => !linkedIds.has(m.id) || (editingId && recipes.find((r) => r.id === editingId)?.menuItemId === m.id),
+      ),
+    [menuItems, linkedIds, editingId, recipes],
+  );
+
+  const ingredientCost = form.ingredients.reduce((s, i) => s + (Number(i.cost) || 0), 0);
+  const previewMargin =
+    form.salePrice > 0 ? Math.round(((form.salePrice - ingredientCost) / form.salePrice) * 1000) / 10 : 0;
+  const negativeMargin = form.salePrice > 0 && previewMargin < 0;
+
+  function selectMenuItem(id: string) {
+    const item = menuItems.find((m) => m.id === id);
+    if (!item) {
+      setForm((f) => ({ ...f, menuItemId: "" }));
+      return;
+    }
+    setForm((f) => ({
+      ...f,
+      menuItemId: item.id,
+      name: item.name,
+      category: item.category,
+      salePrice: item.price,
+    }));
+    setFormError(null);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
+    if (!form.menuItemId) {
+      setFormError("Select a menu item for this recipe");
+      return;
+    }
+    if (negativeMargin) {
+      const ok = confirm(
+        `Warning: this recipe has a negative margin (${previewMargin}%). Cost is higher than the menu sale price. Save anyway?`,
+      );
+      if (!ok) return;
+    }
+
     setSubmitting(true);
     try {
       const ingredients = form.ingredients.filter((i) => i.name.trim());
-      const payload = { ...form, ingredients };
+      const payload = {
+        menuItemId: form.menuItemId,
+        name: form.name,
+        category: form.category,
+        salePrice: form.salePrice,
+        ingredients,
+      };
       if (editingId) {
         await updateRecipe(editingId, payload);
       } else {
@@ -63,6 +122,8 @@ export default function RecipeManagement() {
       setEditingId(null);
       setTab("recipes");
       load();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Could not save recipe");
     } finally {
       setSubmitting(false);
     }
@@ -75,11 +136,14 @@ export default function RecipeManagement() {
       category: recipe.category,
       salePrice: recipe.salePrice,
       ingredients: recipe.ingredients.length ? recipe.ingredients : [{ ...emptyIngredient }],
+      menuItemId: recipe.menuItemId || "",
     });
+    setFormError(null);
     setTab("add");
   }
 
   async function handleDelete(id: string) {
+    if (!confirm("Delete this recipe?")) return;
     await deleteRecipe(id);
     load();
   }
@@ -105,7 +169,14 @@ export default function RecipeManagement() {
         ).map(([key, label]) => (
           <button
             key={key}
-            onClick={() => setTab(key)}
+            onClick={() => {
+              if (key === "add" && !editingId) {
+                setForm(emptyForm);
+                setEditingId(null);
+                setFormError(null);
+              }
+              setTab(key);
+            }}
             className={clsx(
               "rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
               tab === key ? "bg-brand-600 text-white" : "text-slate-500 hover:text-slate-700",
@@ -145,7 +216,12 @@ export default function RecipeManagement() {
                       <p className="font-bold text-slate-900">{recipe.name}</p>
                       <p className="text-sm text-slate-500">{recipe.category}</p>
                     </div>
-                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                    <span
+                      className={clsx(
+                        "rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                        recipe.margin < 0 ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700",
+                      )}
+                    >
                       {recipe.margin}% margin
                     </span>
                   </div>
@@ -218,9 +294,16 @@ export default function RecipeManagement() {
                       <td className="px-5 py-3 text-slate-500">{r.category}</td>
                       <td className="px-5 py-3 text-slate-700">₹{r.costPrice}</td>
                       <td className="px-5 py-3 text-slate-700">₹{r.salePrice}</td>
-                      <td className="px-5 py-3 font-medium text-emerald-600">₹{r.grossProfit}</td>
+                      <td className={clsx("px-5 py-3 font-medium", r.grossProfit < 0 ? "text-red-600" : "text-emerald-600")}>
+                        ₹{r.grossProfit}
+                      </td>
                       <td className="px-5 py-3">
-                        <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                        <span
+                          className={clsx(
+                            "rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                            r.margin < 0 ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700",
+                          )}
+                        >
                           {r.margin}%
                         </span>
                       </td>
@@ -252,44 +335,42 @@ export default function RecipeManagement() {
       {tab === "add" && (
         <div className="card max-w-2xl p-6">
           <h3 className="text-base font-semibold text-slate-900">{editingId ? "Edit Recipe" : "Add New Recipe"}</h3>
-          <p className="mb-5 text-xs text-slate-400">Define dish ingredients and cost</p>
+          <p className="mb-5 text-xs text-slate-400">Link a menu item and define ingredients</p>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Dish Name</label>
-              <input
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">Menu Item</label>
+              <select
                 required
-                placeholder="e.g. Palak Paneer"
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                value={form.menuItemId || ""}
+                onChange={(e) => selectMenuItem(e.target.value)}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-              />
+              >
+                <option value="">Select from menu…</option>
+                {selectableMenu.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} · {m.category} · ₹{m.price}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-slate-400">Name, category and sale price sync from the menu item.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Category</label>
-                <select
+                <input
+                  readOnly
                   value={form.category}
-                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600"
+                />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Sale Price (₹)</label>
                 <input
-                  type="number"
-                  required
-                  min={0}
+                  readOnly
                   value={form.salePrice || ""}
-                  onChange={(e) => setForm((f) => ({ ...f, salePrice: Number(e.target.value) || 0 }))}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-600"
                 />
               </div>
             </div>
@@ -336,6 +417,23 @@ export default function RecipeManagement() {
                 Add Ingredient
               </button>
             </div>
+
+            {form.salePrice > 0 && (
+              <div
+                className={clsx(
+                  "flex items-start gap-2 rounded-xl px-3 py-2.5 text-sm",
+                  negativeMargin ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700",
+                )}
+              >
+                {negativeMargin && <AlertTriangle size={16} className="mt-0.5 shrink-0" />}
+                <span>
+                  Estimated margin: <strong>{previewMargin}%</strong> (cost ₹{ingredientCost} / sale ₹{form.salePrice})
+                  {negativeMargin ? " — cost exceeds sale price." : ""}
+                </span>
+              </div>
+            )}
+
+            {formError && <p className="text-sm text-red-600">{formError}</p>}
 
             <button
               type="submit"

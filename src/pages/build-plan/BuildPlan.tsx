@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -243,10 +243,6 @@ const RESTAURANT_TYPES = [
   },
 ] as const;
 
-function formatInr(n: number) {
-  return `₹${n.toLocaleString("en-IN")}`;
-}
-
 function moduleTagsPreview(ids: ModuleId[]) {
   const labels = ids
     .map((id) => MODULES.find((m) => m.id === id)?.label)
@@ -296,11 +292,6 @@ export default function BuildPlan() {
     email: "",
     phone: "",
   });
-
-  const total = useMemo(
-    () => MODULES.filter((m) => selected.includes(m.id)).reduce((sum, m) => sum + m.price, 0),
-    [selected],
-  );
 
   const activePlan = PLANS.find((p) => p.id === selectedPlan) ?? PLANS[2];
 
@@ -613,18 +604,10 @@ export default function BuildPlan() {
                             <strong>{m.label}</strong>
                             <p>{m.desc}</p>
                           </div>
-                          <span className="bp-review-price">{formatInr(m.price)}/mo</span>
                         </li>
                       );
                     })}
                   </ul>
-                  <div className="bp-review-total">
-                    <div>
-                      <span>Monthly total</span>
-                      <strong>{formatInr(total)}/mo</strong>
-                    </div>
-                    <p>First 30 days free — no card needed</p>
-                  </div>
                 </div>
 
                 <div className="bp-next-card">

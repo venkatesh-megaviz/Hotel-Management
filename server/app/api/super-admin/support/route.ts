@@ -29,6 +29,8 @@ export async function GET(request: Request) {
       issue: t.issue,
       status: t.status,
       priority: t.priority,
+      response: t.response || "",
+      assignedTo: t.assignedTo || "",
       submitted: formatRelative((t as SupportTicketDoc & { createdAt?: Date }).createdAt),
     }));
 

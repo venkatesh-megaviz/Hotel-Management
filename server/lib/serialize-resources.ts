@@ -140,6 +140,7 @@ export function serializeRecipe(recipe: RecipeDoc) {
     grossProfit,
     margin: Math.round(margin * 10) / 10,
     ingredientCount: recipe.ingredients.length,
+    menuItemId: recipe.menuItem ? recipe.menuItem.toString() : null,
   };
 }
 

@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Check } from "lucide-react";
-import { fetchSaTenant, updateSaTenant, type SaTenant } from "@/lib/api";
+import { ArrowLeft, Check, X } from "lucide-react";
+import { ApiError, fetchSaTenant, updateSaTenant, type SaTenant } from "@/lib/api";
 
 function formatInr(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;
 }
+
+type EditDraft = {
+  ownerName: string;
+  email: string;
+  phone: string;
+  address: string;
+};
 
 export default function TenantDetail() {
   const { id = "" } = useParams();
@@ -15,6 +22,9 @@ export default function TenantDetail() {
   const [activity, setActivity] = useState<{ text: string; date: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<EditDraft | null>(null);
+  const [editError, setEditError] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -28,6 +38,54 @@ export default function TenantDetail() {
       .catch(() => setTenant(null))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!editing) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setEditing(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editing]);
+
+  function openEdit() {
+    if (!tenant) return;
+    setEditError("");
+    setEditing({
+      ownerName: tenant.owner,
+      email: tenant.email,
+      phone: tenant.phone,
+      address: tenant.address,
+    });
+  }
+
+  async function saveEdit() {
+    if (!tenant || !editing) return;
+    if (!editing.ownerName.trim()) {
+      setEditError("Owner name is required");
+      return;
+    }
+    if (!editing.email.trim()) {
+      setEditError("Email is required");
+      return;
+    }
+    setSavingEdit(true);
+    setEditError("");
+    try {
+      const res = await updateSaTenant(tenant.id, {
+        ownerName: editing.ownerName.trim(),
+        email: editing.email.trim(),
+        phone: editing.phone.trim(),
+        address: editing.address.trim(),
+      });
+      setTenant(res.tenant);
+      setEditing(null);
+    } catch (err) {
+      setEditError(err instanceof ApiError ? err.message : "Failed to save details");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   async function suspend() {
     if (!tenant) return;
@@ -66,7 +124,7 @@ export default function TenantDetail() {
           </div>
         </div>
         <div className="sa-tenant-actions">
-          <button type="button" className="sa-btn is-ghost">
+          <button type="button" className="sa-btn is-ghost" onClick={openEdit}>
             Edit Details
           </button>
           <button type="button" className="sa-btn is-primary">
@@ -169,6 +227,69 @@ export default function TenantDetail() {
           </div>
         </div>
       </div>
+
+      {editing && (
+        <div className="sa-modal-backdrop" onClick={() => setEditing(null)}>
+          <div
+            className="sa-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sa-edit-tenant-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sa-modal-head">
+              <div>
+                <h2 id="sa-edit-tenant-title">Edit Details</h2>
+                <p>Update owner contact info for {tenant.name}</p>
+              </div>
+              <button type="button" className="sa-modal-close" onClick={() => setEditing(null)} aria-label="Close">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="sa-modal-body">
+              <label className="sa-field">
+                <span>Owner</span>
+                <input
+                  value={editing.ownerName}
+                  onChange={(e) => setEditing({ ...editing, ownerName: e.target.value })}
+                />
+              </label>
+              <label className="sa-field">
+                <span>Email</span>
+                <input
+                  type="email"
+                  value={editing.email}
+                  onChange={(e) => setEditing({ ...editing, email: e.target.value })}
+                />
+              </label>
+              <label className="sa-field">
+                <span>Phone</span>
+                <input
+                  value={editing.phone}
+                  onChange={(e) => setEditing({ ...editing, phone: e.target.value })}
+                />
+              </label>
+              <label className="sa-field">
+                <span>Address</span>
+                <textarea
+                  rows={3}
+                  value={editing.address}
+                  onChange={(e) => setEditing({ ...editing, address: e.target.value })}
+                />
+              </label>
+              {editError && <p className="sa-field-error">{editError}</p>}
+            </div>
+            <div className="sa-modal-foot">
+              <button type="button" className="sa-btn is-primary" disabled={savingEdit} onClick={saveEdit}>
+                {savingEdit ? "Saving…" : "Save Changes"}
+              </button>
+              <button type="button" className="sa-btn is-ghost" onClick={() => setEditing(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -8,6 +8,8 @@ const supportTicketSchema = new Schema(
     issue: { type: String, required: true },
     status: { type: String, enum: ["Open", "In Progress", "Resolved"], default: "Open" },
     priority: { type: String, enum: ["High", "Medium", "Low"], default: "Medium" },
+    response: { type: String, default: "" },
+    assignedTo: { type: String, default: "" },
   },
   { timestamps: true },
 );

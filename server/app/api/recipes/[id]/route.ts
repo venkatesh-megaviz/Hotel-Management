@@ -4,6 +4,7 @@ import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
 import { recipeUpdateSchema } from "@/lib/validation";
 import Recipe from "@/models/Recipe";
+import MenuItem from "@/models/MenuItem";
 import { serializeRecipe } from "@/lib/serialize-resources";
 
 export async function OPTIONS(request: Request) {
@@ -23,9 +24,31 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     await connectToDatabase();
+
+    const patch: Record<string, unknown> = {};
+    if (parsed.data.ingredients) patch.ingredients = parsed.data.ingredients;
+
+    if (parsed.data.menuItemId) {
+      const menuItem = await MenuItem.findOne({
+        _id: parsed.data.menuItemId,
+        restaurant: auth.restaurantId,
+      });
+      if (!menuItem) {
+        return withCors(request, jsonResponse({ error: "Select a menu item that exists on your menu" }, 400));
+      }
+      patch.menuItem = menuItem._id;
+      patch.name = menuItem.name;
+      patch.category = menuItem.category;
+      patch.salePrice = menuItem.price;
+    } else {
+      if (parsed.data.name !== undefined) patch.name = parsed.data.name;
+      if (parsed.data.category !== undefined) patch.category = parsed.data.category;
+      if (parsed.data.salePrice !== undefined) patch.salePrice = parsed.data.salePrice;
+    }
+
     const recipe = await Recipe.findOneAndUpdate(
       { _id: id, restaurant: auth.restaurantId },
-      parsed.data,
+      patch,
       { new: true },
     );
 

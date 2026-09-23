@@ -12,6 +12,7 @@ const ingredientSchema = new Schema(
 const recipeSchema = new Schema(
   {
     restaurant: { type: Schema.Types.ObjectId, ref: "Restaurant", required: true, index: true },
+    menuItem: { type: Schema.Types.ObjectId, ref: "MenuItem", default: null },
     name: { type: String, required: true, trim: true },
     category: { type: String, required: true, trim: true },
     salePrice: { type: Number, required: true, min: 0 },

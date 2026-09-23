@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import clsx from "clsx";
 import { fetchSaTenants, type SaTenant, type SaTenantStatus } from "@/lib/api";
@@ -11,12 +11,19 @@ function formatInr(n: number) {
 }
 
 export default function TenantManagement() {
-  const [query, setQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  const [query, setQuery] = useState(() => searchParams.get("q") || "");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
   const [page, setPage] = useState(1);
   const [tenants, setTenants] = useState<SaTenant[]>([]);
   const [loading, setLoading] = useState(true);
   const pageSize = 8;
+
+  useEffect(() => {
+    const q = searchParams.get("q") || "";
+    setQuery(q);
+    setPage(1);
+  }, [searchParams]);
 
   useEffect(() => {
     setLoading(true);

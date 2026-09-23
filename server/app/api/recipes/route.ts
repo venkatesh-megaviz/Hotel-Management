@@ -4,6 +4,7 @@ import { getAuthContext, unauthorized } from "@/lib/auth-context";
 import { withCors, corsPreflight } from "@/lib/cors";
 import { recipeSchema } from "@/lib/validation";
 import Recipe from "@/models/Recipe";
+import MenuItem from "@/models/MenuItem";
 import { serializeRecipe } from "@/lib/serialize-resources";
 import { seedDefaultRecipes } from "@/lib/seed-demo-data";
 
@@ -49,7 +50,22 @@ export async function POST(request: Request) {
     }
 
     await connectToDatabase();
-    const recipe = await Recipe.create({ ...parsed.data, restaurant: auth.restaurantId });
+    const menuItem = await MenuItem.findOne({
+      _id: parsed.data.menuItemId,
+      restaurant: auth.restaurantId,
+    });
+    if (!menuItem) {
+      return withCors(request, jsonResponse({ error: "Select a menu item that exists on your menu" }, 400));
+    }
+
+    const recipe = await Recipe.create({
+      restaurant: auth.restaurantId,
+      menuItem: menuItem._id,
+      name: menuItem.name,
+      category: menuItem.category,
+      salePrice: menuItem.price,
+      ingredients: parsed.data.ingredients,
+    });
 
     return withCors(request, jsonResponse({ recipe: serializeRecipe(recipe) }, 201));
   } catch (err) {

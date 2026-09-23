@@ -234,5 +234,21 @@ export async function seedDefaultCustomers(restaurantId: string) {
 export async function seedDefaultRecipes(restaurantId: string) {
   const count = await Recipe.countDocuments({ restaurant: restaurantId });
   if (count > 0) return;
-  await Recipe.insertMany(DEFAULT_RECIPES.map((r) => ({ ...r, restaurant: restaurantId })));
+
+  const menu = await MenuItem.find({ restaurant: restaurantId });
+  const byName = new Map(menu.map((m) => [m.name.toLowerCase(), m]));
+
+  await Recipe.insertMany(
+    DEFAULT_RECIPES.map((r) => {
+      const linked = byName.get(r.name.toLowerCase());
+      return {
+        ...r,
+        restaurant: restaurantId,
+        menuItem: linked?._id ?? null,
+        name: linked?.name ?? r.name,
+        category: linked?.category ?? r.category,
+        salePrice: linked?.price ?? r.salePrice,
+      };
+    }),
+  );
 }

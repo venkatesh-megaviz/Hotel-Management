@@ -427,6 +427,14 @@ export async function buildOverviewStats() {
   const monthlyRevenue = tenants.reduce((sum, t) => sum + t.mrr, 0);
   const retentionRate = total ? Math.round((activeSubs / total) * 1000) / 10 : 0;
 
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const newThisMonth = restaurants.filter((r) => {
+    const created = docDate(r);
+    return created != null && created >= monthStart && created < nextMonthStart;
+  }).length;
+
   const months = ["Mar", "Apr", "May", "Jun", "Jul", "Aug"];
   const mrrSeries = months.map((month, i) => ({
     month,
@@ -447,6 +455,7 @@ export async function buildOverviewStats() {
       monthlyRevenue,
       monthlyRevenueLabel: `₹${(monthlyRevenue / 100000).toFixed(1)}L`,
       retentionRate,
+      newThisMonth,
     },
     mrrSeries,
     moduleAdoption,

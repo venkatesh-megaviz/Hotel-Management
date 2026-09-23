@@ -13,6 +13,8 @@ const updateSchema = z.object({
   status: z.enum(["Open", "In Progress", "Resolved"]).optional(),
   priority: z.enum(["High", "Medium", "Low"]).optional(),
   issue: z.string().trim().min(1).optional(),
+  response: z.string().trim().optional(),
+  assignedTo: z.string().trim().optional(),
 });
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -46,6 +48,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
           issue: ticket.issue,
           status: ticket.status,
           priority: ticket.priority,
+          response: ticket.response || "",
+          assignedTo: ticket.assignedTo || "",
         },
       }),
     );

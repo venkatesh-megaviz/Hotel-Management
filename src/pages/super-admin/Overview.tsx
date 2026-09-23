@@ -26,6 +26,7 @@ export default function SuperAdminOverview() {
     activeRate: 0,
     monthlyRevenueLabel: "₹0L",
     retentionRate: 0,
+    newThisMonth: 0,
   });
   const [mrrSeries, setMrrSeries] = useState<{ month: string; value: number }[]>([]);
   const [moduleAdoption, setModuleAdoption] = useState<{ name: string; pct: number; color: string }[]>([]);
@@ -40,6 +41,7 @@ export default function SuperAdminOverview() {
           activeRate: res.stats.activeRate,
           monthlyRevenueLabel: res.stats.monthlyRevenueLabel,
           retentionRate: res.stats.retentionRate,
+          newThisMonth: res.stats.newThisMonth,
         });
         setMrrSeries(res.mrrSeries);
         setModuleAdoption(res.moduleAdoption);
@@ -53,7 +55,7 @@ export default function SuperAdminOverview() {
     {
       label: "Total Tenants",
       value: String(stats.totalTenants),
-      help: "+18 this month",
+      help: `+${stats.newThisMonth} this month`,
       tone: "up" as const,
       icon: Building2,
       iconBg: "sa-icon-gold",
