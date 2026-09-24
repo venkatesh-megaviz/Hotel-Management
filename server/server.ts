@@ -55,6 +55,7 @@ import * as saSupport from "@/app/api/super-admin/support/route";
 import * as saSupportId from "@/app/api/super-admin/support/[id]/route";
 import * as saSettings from "@/app/api/super-admin/settings/route";
 import * as saPassword from "@/app/api/super-admin/settings/password/route";
+import * as saLogin from "@/app/api/super-admin/auth/login/route";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -208,6 +209,9 @@ mountRoute(app, "get", "/api/attendance", attendance.GET);
 mountRoute(app, "post", "/api/attendance", attendance.POST);
 mountRoute(app, "options", "/api/attendance/:id", attendanceId.OPTIONS);
 mountRoute(app, "patch", "/api/attendance/:id", attendanceId.PATCH, true);
+
+mountRoute(app, "options", "/api/super-admin/auth/login", saLogin.OPTIONS);
+mountRoute(app, "post", "/api/super-admin/auth/login", saLogin.POST);
 
 mountRoute(app, "options", "/api/super-admin/overview", saOverview.OPTIONS);
 mountRoute(app, "get", "/api/super-admin/overview", saOverview.GET);

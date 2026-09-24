@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import SuperAdminProtectedRoute from "@/components/SuperAdminProtectedRoute";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import Website from "@/pages/website/Website";
 import BuildPlan from "@/pages/build-plan/BuildPlan";
@@ -29,6 +30,7 @@ import Notifications from "@/pages/Notifications";
 import InvoiceView from "@/pages/InvoiceView";
 import QRGuestOrder from "@/pages/QRGuestOrder";
 import SuperAdminLayout from "@/pages/super-admin/SuperAdminLayout";
+import SuperAdminLogin from "@/pages/super-admin/SuperAdminLogin";
 import SuperAdminOverview from "@/pages/super-admin/Overview";
 import TenantManagement from "@/pages/super-admin/TenantManagement";
 import TenantDetail from "@/pages/super-admin/TenantDetail";
@@ -45,9 +47,11 @@ export default function App() {
           <Route path="/" element={<Website />} />
           <Route path="/build-plan" element={<BuildPlan />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/super-admin/login" element={<SuperAdminLogin />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/qr-order/:tableId" element={<QRGuestOrder />} />
+
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
               <Route path="/app" element={<Dashboard />} />
@@ -72,6 +76,9 @@ export default function App() {
               <Route path="/subscription" element={<Subscription />} />
               <Route path="/notifications" element={<Notifications />} />
             </Route>
+          </Route>
+
+          <Route element={<SuperAdminProtectedRoute />}>
             <Route path="/super-admin" element={<SuperAdminLayout />}>
               <Route index element={<SuperAdminOverview />} />
               <Route path="tenants" element={<TenantManagement />} />

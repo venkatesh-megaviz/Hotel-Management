@@ -1,4 +1,4 @@
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import {
   LayoutDashboard,
@@ -7,8 +7,9 @@ import {
   BarChart3,
   LifeBuoy,
   Settings,
-  ArrowLeft,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const NAV = [
   { to: "/super-admin", label: "Overview", icon: LayoutDashboard, end: true },
@@ -20,6 +21,14 @@ const NAV = [
 ];
 
 export default function SuperAdminSidebar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    await logout();
+    navigate("/super-admin/login", { replace: true });
+  }
+
   return (
     <aside className="sa-sidebar">
       <div className="sa-brand">
@@ -45,15 +54,15 @@ export default function SuperAdminSidebar() {
 
       <div className="sa-footer">
         <div className="sa-user">
-          <div className="sa-avatar">S</div>
+          <div className="sa-avatar">{(user?.fullName || "S").charAt(0)}</div>
           <div>
-            <p className="sa-user-name">Super Admin</p>
-            <p className="sa-user-role">Platform Manager</p>
+            <p className="sa-user-name">{user?.fullName || "Super Admin"}</p>
+            <p className="sa-user-role">{user?.email || "Platform Manager"}</p>
           </div>
         </div>
-        <Link to="/app" className="sa-back">
-          <ArrowLeft size={14} /> Back to Dashboard
-        </Link>
+        <button type="button" className="sa-back" onClick={handleLogout}>
+          <LogOut size={14} /> Sign out
+        </button>
       </div>
     </aside>
   );

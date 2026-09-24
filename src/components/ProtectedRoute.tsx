@@ -1,8 +1,9 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
+/** Protects restaurant dashboard routes. Super admins are sent to the platform console. */
 export default function ProtectedRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isSuperAdmin } = useAuth();
 
   if (isLoading) {
     return (
@@ -14,6 +15,10 @@ export default function ProtectedRoute() {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (isSuperAdmin) {
+    return <Navigate to="/super-admin" replace />;
   }
 
   return <Outlet />;

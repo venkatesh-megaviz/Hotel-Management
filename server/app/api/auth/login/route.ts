@@ -8,11 +8,11 @@ import { withCors, corsPreflight } from "@/lib/cors";
 import { authCookieOptions } from "@/lib/auth-cookie";
 import { serializeUser, serializeRestaurant } from "@/lib/serialize";
 import { ensureDemoAccount } from "@/lib/ensure-demo-account";
+import { SUPER_ADMIN_EMAIL } from "@/lib/super-admin";
 import { z } from "zod";
 
-/** Demo-friendly: any non-empty email + password can enter the dashboard. */
-const demoLoginSchema = z.object({
-  email: z.string().trim().min(1, "Email is required"),
+const loginSchema = z.object({
+  email: z.string().trim().email("Enter a valid email"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -23,7 +23,7 @@ export async function OPTIONS(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const parsed = demoLoginSchema.safeParse(body);
+    const parsed = loginSchema.safeParse(body);
 
     if (!parsed.success) {
       return withCors(
@@ -36,30 +36,59 @@ export async function POST(request: Request) {
     const { password } = parsed.data;
     await connectToDatabase();
 
+    if (email === SUPER_ADMIN_EMAIL.toLowerCase()) {
+      return withCors(
+        request,
+        jsonResponse(
+          { error: "Use the Super Admin login at /super-admin/login" },
+          403,
+        ),
+      );
+    }
+
     const user = (await User.findOne({ email })) as UserDoc | null;
     if (user) {
-      const valid = await bcrypt.compare(password, user.passwordHash);
-      if (valid) {
-        const restaurant = (await Restaurant.findById(user.restaurant)) as RestaurantDoc | null;
-        const token = signToken({
-          userId: user._id.toString(),
-          restaurantId: restaurant?._id.toString() ?? "",
-        });
+      if (user.role === "SuperAdmin") {
         return withCors(
           request,
           jsonResponse(
-            {
-              user: serializeUser(user),
-              restaurant: restaurant ? serializeRestaurant(restaurant) : null,
-            },
-            200,
-            [{ name: JWT_COOKIE_NAME, value: token, options: authCookieOptions(30 * 24 * 60 * 60) }],
+            { error: "Use the Super Admin login at /super-admin/login" },
+            403,
           ),
         );
       }
+
+      const valid = await bcrypt.compare(password, user.passwordHash);
+      if (!valid) {
+        return withCors(request, jsonResponse({ error: "Invalid email or password" }, 401));
+      }
+
+      const restaurant = (await Restaurant.findById(user.restaurant)) as RestaurantDoc | null;
+      if (!restaurant) {
+        return withCors(
+          request,
+          jsonResponse({ error: "No restaurant linked to this account" }, 400),
+        );
+      }
+
+      const token = signToken({
+        userId: user._id.toString(),
+        restaurantId: restaurant._id.toString(),
+      });
+      return withCors(
+        request,
+        jsonResponse(
+          {
+            user: serializeUser(user),
+            restaurant: serializeRestaurant(restaurant),
+          },
+          200,
+          [{ name: JWT_COOKIE_NAME, value: token, options: authCookieOptions(30 * 24 * 60 * 60) }],
+        ),
+      );
     }
 
-    // Demo fallback: any other credentials open the Spice Garden demo account.
+    // Demo fallback: unknown restaurant credentials open the Spice Garden demo account.
     const demo = await ensureDemoAccount();
     const token = signToken({
       userId: demo.user._id.toString(),

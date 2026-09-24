@@ -532,7 +532,7 @@ function PasswordTab({ showToast }: { showToast: (type: "success" | "error", mes
 
   async function handleSignOut() {
     await logout();
-    navigate("/login");
+    navigate("/login", { replace: true });
   }
 
   return (

@@ -16,6 +16,156 @@
   font-family: var(--font-body);
 }
 
+.sa-login-page {
+  --sa-gold: #d6a351;
+  --sa-dark: #0a0807;
+  --sa-cream: #f7f3ec;
+  --sa-ink: rgba(10, 8, 7, 0.88);
+  --sa-muted: rgba(10, 8, 7, 0.55);
+  --font-display: "National Park", Georgia, serif;
+  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(214, 163, 81, 0.18), transparent 55%),
+    linear-gradient(180deg, #faf6ee 0%, var(--sa-cream) 45%, #efe8dc 100%);
+  color: var(--sa-ink);
+  font-family: var(--font-body);
+}
+
+.sa-login-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border: 1px solid rgba(10, 8, 7, 0.06);
+  border-radius: 20px;
+  padding: 32px 28px;
+  box-shadow: 0 24px 60px rgba(10, 8, 7, 0.08);
+}
+
+.sa-login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.sa-login-head {
+  margin-bottom: 22px;
+}
+
+.sa-login-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(214, 163, 81, 0.16);
+  color: #9a6b1f;
+  margin-bottom: 14px;
+}
+
+.sa-login-head h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--sa-dark);
+}
+
+.sa-login-head p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--sa-muted);
+}
+
+.sa-login-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.sa-login-form {
+  display: grid;
+  gap: 14px;
+}
+
+.sa-login-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sa-ink);
+}
+
+.sa-login-form input {
+  width: 100%;
+  border: 1px solid rgba(10, 8, 7, 0.1);
+  border-radius: 12px;
+  padding: 11px 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--sa-ink);
+  background: #fff;
+  outline: none;
+}
+
+.sa-login-form input:focus {
+  border-color: rgba(214, 163, 81, 0.7);
+  box-shadow: 0 0 0 3px rgba(214, 163, 81, 0.18);
+}
+
+.sa-login-password {
+  position: relative;
+}
+
+.sa-login-password input {
+  padding-right: 40px;
+}
+
+.sa-login-password button {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: var(--sa-muted);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.sa-login-hint {
+  margin: 20px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--sa-muted);
+}
+
+.sa-login-hint a {
+  color: #9a6b1f;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.sa-login-hint a:hover {
+  text-decoration: underline;
+}
+
 .sa-shell h1,
 .sa-shell h2,
 .sa-topbar h1,
@@ -171,6 +321,11 @@
   text-decoration: none;
   font-size: 12px;
   font-weight: 600;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .sa-back:hover {

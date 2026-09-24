@@ -3,6 +3,7 @@ import {
   ApiError,
   fetchCurrentUser,
   loginAccount,
+  loginSuperAdmin,
   logoutAccount,
   registerAccount,
   type ApiRestaurant,
@@ -15,8 +16,13 @@ interface AuthContextValue {
   restaurant: ApiRestaurant | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isSuperAdmin: boolean;
   register: (payload: RegisterPayload) => Promise<{ user: ApiUser; restaurant: ApiRestaurant | null }>;
   login: (email: string, password: string) => Promise<{ user: ApiUser; restaurant: ApiRestaurant | null }>;
+  loginAsSuperAdmin: (
+    email: string,
+    password: string,
+  ) => Promise<{ user: ApiUser; restaurant: ApiRestaurant | null }>;
   logout: () => Promise<void>;
   setRestaurant: (restaurant: ApiRestaurant) => void;
 }
@@ -55,6 +61,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return res;
   }, []);
 
+  const loginAsSuperAdmin = useCallback(async (email: string, password: string) => {
+    const res = await loginSuperAdmin(email, password);
+    setUser(res.user);
+    setRestaurant(res.restaurant);
+    return res;
+  }, []);
+
   const logout = useCallback(async () => {
     await logoutAccount().catch(() => undefined);
     setUser(null);
@@ -63,7 +76,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, restaurant, isLoading, isAuthenticated: !!user, register, login, logout, setRestaurant }}
+      value={{
+        user,
+        restaurant,
+        isLoading,
+        isAuthenticated: !!user,
+        isSuperAdmin: user?.role === "SuperAdmin",
+        register,
+        login,
+        loginAsSuperAdmin,
+        logout,
+        setRestaurant,
+      }}
     >
       {children}
     </AuthContext.Provider>

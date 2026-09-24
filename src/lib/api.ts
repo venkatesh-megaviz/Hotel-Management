@@ -90,6 +90,13 @@ export function loginAccount(email: string, password: string) {
   });
 }
 
+export function loginSuperAdmin(email: string, password: string) {
+  return request<AuthResponse>("/api/super-admin/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
+
 export function fetchCurrentUser() {
   return request<AuthResponse>("/api/auth/me");
 }

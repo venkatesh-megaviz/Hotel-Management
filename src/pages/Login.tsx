@@ -9,15 +9,15 @@ function isValidEmail(email: string) {
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isSuperAdmin, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (isAuthenticated) {
-    return <Navigate to="/app" replace />;
+  if (!isLoading && isAuthenticated) {
+    return <Navigate to={isSuperAdmin ? "/super-admin" : "/app"} replace />;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -29,16 +29,15 @@ export default function Login() {
       return;
     }
 
-    // Demo mode: any credentials work; still prefer a valid-looking email for the form.
-    if (!isValidEmail(email) && !email.includes("@")) {
+    if (!isValidEmail(email)) {
       setError("Enter a valid email");
       return;
     }
 
     setSubmitting(true);
     try {
-      await login(email.trim(), password);
-      navigate("/app");
+      const res = await login(email.trim(), password);
+      navigate(res.user.role === "SuperAdmin" ? "/super-admin" : "/app");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {
@@ -99,7 +98,9 @@ export default function Login() {
                 <input type="checkbox" className="rounded border-slate-300 text-brand-600 focus:ring-brand-200" />
                 Remember me
               </label>
-              <span className="text-xs text-slate-400">Demo: any credentials work</span>
+              <Link to="/super-admin/login" className="text-xs font-medium text-brand-600 hover:underline">
+                Super Admin login
+              </Link>
             </div>
             <button
               type="submit"

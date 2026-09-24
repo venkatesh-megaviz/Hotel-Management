@@ -21,7 +21,7 @@ export const ALL_MODULES = [
   "Website Orders",
 ] as const;
 
-export const SUPER_ADMIN_EMAIL = "admin@dinevor.in";
+export const SUPER_ADMIN_EMAIL = "admin@dinevoro.com";
 export const SUPER_ADMIN_PASSWORD = "SuperAdmin@123";
 
 export type PlatformPlanName = "Basic" | "Classic" | "Advanced";
@@ -142,8 +142,7 @@ export async function getPlatformAdmin(request: Request) {
   const user = (await User.findById(payload.userId)) as UserDoc | null;
   if (!user) return null;
 
-  // Demo-friendly: SuperAdmin or restaurant Owner can open the platform console.
-  if (user.role !== "SuperAdmin" && user.role !== "Owner") return null;
+  if (user.role !== "SuperAdmin") return null;
   return { user, payload };
 }
 
@@ -153,23 +152,21 @@ export function forbidden(request: Request) {
 
 export async function ensureSuperAdminUser() {
   await connectToDatabase();
-  let user = (await User.findOne({ email: SUPER_ADMIN_EMAIL })) as UserDoc | null;
   const passwordHash = await bcrypt.hash(SUPER_ADMIN_PASSWORD, 10);
 
-  if (!user) {
-    user = (await User.create({
-      fullName: "Super Admin",
-      email: SUPER_ADMIN_EMAIL,
-      passwordHash,
-      role: "SuperAdmin",
-    })) as unknown as UserDoc;
-  } else if (user.role !== "SuperAdmin") {
-    user = (await User.findByIdAndUpdate(
-      user._id,
-      { role: "SuperAdmin", passwordHash, fullName: "Super Admin" },
-      { new: true },
-    )) as UserDoc;
-  }
+  const user = (await User.findOneAndUpdate(
+    { email: SUPER_ADMIN_EMAIL },
+    {
+      $set: {
+        fullName: "Super Admin",
+        email: SUPER_ADMIN_EMAIL,
+        passwordHash,
+        role: "SuperAdmin",
+      },
+      $unset: { restaurant: 1 },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  )) as UserDoc;
 
   return user;
 }
