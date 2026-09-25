@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SuperAdminProtectedRoute from "@/components/SuperAdminProtectedRoute";
@@ -47,6 +47,7 @@ export default function App() {
           <Route path="/" element={<Website />} />
           <Route path="/build-plan" element={<BuildPlan />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<Navigate to="/login" replace />} />
           <Route path="/super-admin/login" element={<SuperAdminLogin />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
