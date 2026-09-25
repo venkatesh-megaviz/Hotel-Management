@@ -47,7 +47,7 @@ export default function App() {
           <Route path="/" element={<Website />} />
           <Route path="/build-plan" element={<BuildPlan />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/admin" element={<Navigate to="/login" replace />} />
+          <Route path="/admin" element={<Login />} />
           <Route path="/super-admin/login" element={<SuperAdminLogin />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
