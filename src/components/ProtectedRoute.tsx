@@ -18,7 +18,7 @@ export default function ProtectedRoute() {
   }
 
   if (isSuperAdmin) {
-    return <Navigate to="/super-admin" replace />;
+    return <Navigate to="/admin" replace />;
   }
 
   return <Outlet />;

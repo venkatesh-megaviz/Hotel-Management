@@ -208,7 +208,7 @@ export default function Subscriptions() {
                 <button type="button" className="sa-plan-btn is-edit" onClick={() => openEdit(plan)}>
                   Edit Plan
                 </button>
-                <Link to="/super-admin/tenants" className="sa-plan-btn is-view">
+                <Link to="/admin/tenants" className="sa-plan-btn is-view">
                   View Tenants
                 </Link>
               </div>

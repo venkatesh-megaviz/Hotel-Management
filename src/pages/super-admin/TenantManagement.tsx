@@ -130,7 +130,7 @@ export default function TenantManagement() {
                       </td>
                       <td>{t.joined}</td>
                       <td>
-                        <Link to={`/super-admin/tenants/${t.id}`} className="sa-action">
+                        <Link to={`/admin/tenants/${t.id}`} className="sa-action">
                           View
                         </Link>
                       </td>

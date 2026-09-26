@@ -105,7 +105,7 @@ export default function TenantDetail() {
 
   return (
     <div className="sa-stack">
-      <Link to="/super-admin/tenants" className="sa-crumb">
+      <Link to="/admin/tenants" className="sa-crumb">
         <ArrowLeft size={14} /> Tenants / <strong>{tenant.name}</strong>
       </Link>
 

@@ -54,13 +54,13 @@ export default function SuperAdminTopbar({
     const q = query.trim();
     if (!q) return;
     setOpen(false);
-    navigate(`/super-admin/tenants?q=${encodeURIComponent(q)}`);
+    navigate(`/admin/tenants?q=${encodeURIComponent(q)}`);
   }
 
   function goToTenant(id: string) {
     setOpen(false);
     setQuery("");
-    navigate(`/super-admin/tenants/${id}`);
+    navigate(`/admin/tenants/${id}`);
   }
 
   return (

@@ -169,7 +169,7 @@ export default function SuperAdminOverview() {
             <h2>Recent Tenants</h2>
             <p>Latest restaurants onboarded</p>
           </div>
-          <Link to="/super-admin/tenants" className="sa-link">
+          <Link to="/admin/tenants" className="sa-link">
             View all <ArrowUpRight size={14} />
           </Link>
         </div>
@@ -188,7 +188,7 @@ export default function SuperAdminOverview() {
               {recent.map((t) => (
                 <tr key={t.id}>
                   <td>
-                    <Link to={`/super-admin/tenants/${t.id}`} className="sa-tenant-cell">
+                    <Link to={`/admin/tenants/${t.id}`} className="sa-tenant-cell">
                       <span className="sa-tenant-avatar">{t.name[0]}</span>
                       <span>
                         <strong>{t.name}</strong>

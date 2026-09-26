@@ -17,7 +17,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
 
   if (!isLoading && isAuthenticated) {
-    return <Navigate to={isSuperAdmin ? "/super-admin" : "/app"} replace />;
+    return <Navigate to={isSuperAdmin ? "/admin" : "/app"} replace />;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -37,7 +37,7 @@ export default function Login() {
     setSubmitting(true);
     try {
       const res = await login(email.trim(), password);
-      navigate(res.user.role === "SuperAdmin" ? "/super-admin" : "/app");
+      navigate(res.user.role === "SuperAdmin" ? "/admin" : "/app");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {
@@ -98,7 +98,7 @@ export default function Login() {
                 <input type="checkbox" className="rounded border-slate-300 text-brand-600 focus:ring-brand-200" />
                 Remember me
               </label>
-              <Link to="/super-admin/login" className="text-xs font-medium text-brand-600 hover:underline">
+              <Link to="/admin/login" className="text-xs font-medium text-brand-600 hover:underline">
                 Super Admin login
               </Link>
             </div>

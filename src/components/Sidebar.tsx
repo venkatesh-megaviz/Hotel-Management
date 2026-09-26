@@ -78,7 +78,7 @@ const navSections = [
     items: [
       { to: "/notifications", label: "Notifications", icon: Bell, badge: true },
       { to: "/settings", label: "Settings", icon: Settings },
-      { to: "/super-admin", label: "Super Admin", icon: Shield },
+      { to: "/admin", label: "Super Admin", icon: Shield },
     ],
   },
 ];

@@ -12,12 +12,12 @@ import {
 import { useAuth } from "@/context/AuthContext";
 
 const NAV = [
-  { to: "/super-admin", label: "Overview", icon: LayoutDashboard, end: true },
-  { to: "/super-admin/tenants", label: "Tenant Management", icon: Building2 },
-  { to: "/super-admin/subscriptions", label: "Subscriptions", icon: CreditCard },
-  { to: "/super-admin/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/super-admin/support", label: "Support Center", icon: LifeBuoy },
-  { to: "/super-admin/settings", label: "Platform Settings", icon: Settings },
+  { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
+  { to: "/admin/tenants", label: "Tenant Management", icon: Building2 },
+  { to: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/admin/support", label: "Support Center", icon: LifeBuoy },
+  { to: "/admin/settings", label: "Platform Settings", icon: Settings },
 ];
 
 export default function SuperAdminSidebar() {
@@ -26,13 +26,13 @@ export default function SuperAdminSidebar() {
 
   async function handleLogout() {
     await logout();
-    navigate("/super-admin/login", { replace: true });
+    navigate("/admin/login", { replace: true });
   }
 
   return (
     <aside className="sa-sidebar">
       <div className="sa-brand">
-        <Link to="/super-admin" className="sa-logo">
+        <Link to="/admin" className="sa-logo">
           <img src="/sidebar-logo.png" alt="Dinevoro" />
         </Link>
         <span className="sa-badge">★ Super Admin</span>

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SuperAdminProtectedRoute from "@/components/SuperAdminProtectedRoute";
@@ -39,6 +39,12 @@ import Analytics from "@/pages/super-admin/Analytics";
 import SupportCenter from "@/pages/super-admin/SupportCenter";
 import PlatformSettings from "@/pages/super-admin/PlatformSettings";
 
+function LegacySuperAdminRedirect() {
+  const location = useLocation();
+  const next = location.pathname.replace(/^\/super-admin/, "/admin") || "/admin";
+  return <Navigate to={`${next}${location.search}`} replace />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -47,11 +53,13 @@ export default function App() {
           <Route path="/" element={<Website />} />
           <Route path="/build-plan" element={<BuildPlan />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/admin" element={<Login />} />
-          <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+          <Route path="/admin/login" element={<SuperAdminLogin />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/qr-order/:tableId" element={<QRGuestOrder />} />
+
+          {/* Legacy Super Admin URLs → /admin */}
+          <Route path="/super-admin/*" element={<LegacySuperAdminRedirect />} />
 
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
@@ -80,7 +88,7 @@ export default function App() {
           </Route>
 
           <Route element={<SuperAdminProtectedRoute />}>
-            <Route path="/super-admin" element={<SuperAdminLayout />}>
+            <Route path="/admin" element={<SuperAdminLayout />}>
               <Route index element={<SuperAdminOverview />} />
               <Route path="tenants" element={<TenantManagement />} />
               <Route path="tenants/:id" element={<TenantDetail />} />

@@ -14,7 +14,7 @@ export default function SuperAdminLogin() {
   const [error, setError] = useState<string | null>(null);
 
   if (!isLoading && isAuthenticated && isSuperAdmin) {
-    return <Navigate to="/super-admin" replace />;
+    return <Navigate to="/admin" replace />;
   }
 
   if (!isLoading && isAuthenticated && !isSuperAdmin) {
@@ -33,7 +33,7 @@ export default function SuperAdminLogin() {
     setSubmitting(true);
     try {
       await loginAsSuperAdmin(email.trim(), password);
-      navigate("/super-admin");
+      navigate("/admin");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {

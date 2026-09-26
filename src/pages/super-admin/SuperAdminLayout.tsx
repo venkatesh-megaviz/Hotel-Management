@@ -4,17 +4,17 @@ import SuperAdminTopbar from "./SuperAdminTopbar";
 import "./SuperAdmin.css";
 
 const TITLES: Record<string, { title: string; subtitle?: string }> = {
-  "/super-admin": { title: "Platform Overview" },
-  "/super-admin/tenants": { title: "Tenant Management" },
-  "/super-admin/subscriptions": { title: "Subscriptions & Billing" },
-  "/super-admin/analytics": { title: "Analytics" },
-  "/super-admin/support": { title: "Support Center" },
-  "/super-admin/settings": { title: "Platform Settings" },
+  "/admin": { title: "Platform Overview" },
+  "/admin/tenants": { title: "Tenant Management" },
+  "/admin/subscriptions": { title: "Subscriptions & Billing" },
+  "/admin/analytics": { title: "Analytics" },
+  "/admin/support": { title: "Support Center" },
+  "/admin/settings": { title: "Platform Settings" },
 };
 
 export default function SuperAdminLayout() {
   const { pathname } = useLocation();
-  const isDetail = pathname.startsWith("/super-admin/tenants/") && pathname !== "/super-admin/tenants";
+  const isDetail = pathname.startsWith("/admin/tenants/") && pathname !== "/admin/tenants";
   const meta = isDetail
     ? { title: "Tenant Management", subtitle: undefined }
     : (TITLES[pathname] ?? { title: "Super Admin" });

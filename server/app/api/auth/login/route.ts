@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       return withCors(
         request,
         jsonResponse(
-          { error: "Use the Super Admin login at /super-admin/login" },
+          { error: "Use the Admin login at /admin/login" },
           403,
         ),
       );
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         return withCors(
           request,
           jsonResponse(
-            { error: "Use the Super Admin login at /super-admin/login" },
+            { error: "Use the Admin login at /admin/login" },
             403,
           ),
         );
