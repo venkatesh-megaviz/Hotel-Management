@@ -37,7 +37,10 @@ import TenantDetail from "@/pages/super-admin/TenantDetail";
 import Subscriptions from "@/pages/super-admin/Subscriptions";
 import Analytics from "@/pages/super-admin/Analytics";
 import SupportCenter from "@/pages/super-admin/SupportCenter";
+import SalesLeads from "@/pages/super-admin/SalesLeads";
+import TeamRoles from "@/pages/super-admin/TeamRoles";
 import PlatformSettings from "@/pages/super-admin/PlatformSettings";
+import ModuleUsage from "@/pages/super-admin/ModuleUsage";
 
 function LegacySuperAdminRedirect() {
   const location = useLocation();
@@ -93,8 +96,11 @@ export default function App() {
               <Route path="tenants" element={<TenantManagement />} />
               <Route path="tenants/:id" element={<TenantDetail />} />
               <Route path="subscriptions" element={<Subscriptions />} />
+              <Route path="modules" element={<ModuleUsage />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="support" element={<SupportCenter />} />
+              <Route path="leads" element={<SalesLeads />} />
+              <Route path="team" element={<TeamRoles />} />
               <Route path="settings" element={<PlatformSettings />} />
             </Route>
           </Route>

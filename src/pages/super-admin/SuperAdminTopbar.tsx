@@ -66,8 +66,8 @@ export default function SuperAdminTopbar({
   return (
     <header className="sa-topbar">
       <div>
-        <h1>{title}</h1>
-        <p>{subtitle ?? `Dinevoro Platform · ${platformDateLabel()}`}</p>
+        <h1>{subtitle ? `${title} · ${subtitle}` : title}</h1>
+        {!subtitle && <p>{`Dinevoro Platform · ${platformDateLabel()}`}</p>}
       </div>
       <div className="sa-topbar-actions">
         <div className="sa-quick-search-wrap" ref={wrapRef}>

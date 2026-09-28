@@ -4,8 +4,11 @@ import {
   LayoutDashboard,
   Building2,
   CreditCard,
+  Boxes,
   BarChart3,
   LifeBuoy,
+  Target,
+  UsersRound,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -15,8 +18,11 @@ const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/admin/tenants", label: "Tenant Management", icon: Building2 },
   { to: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { to: "/admin/modules", label: "Module Usage", icon: Boxes },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/admin/support", label: "Support Center", icon: LifeBuoy },
+  { to: "/admin/leads", label: "Sales Leads", icon: Target },
+  { to: "/admin/team", label: "Team & Roles", icon: UsersRound },
   { to: "/admin/settings", label: "Platform Settings", icon: Settings },
 ];
 
@@ -57,7 +63,7 @@ export default function SuperAdminSidebar() {
           <div className="sa-avatar">{(user?.fullName || "S").charAt(0)}</div>
           <div>
             <p className="sa-user-name">{user?.fullName || "Super Admin"}</p>
-            <p className="sa-user-role">{user?.email || "Platform Manager"}</p>
+            <p className="sa-user-role">Platform Manager</p>
           </div>
         </div>
         <button type="button" className="sa-back" onClick={handleLogout}>

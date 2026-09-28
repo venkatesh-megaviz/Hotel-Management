@@ -968,3 +968,142 @@ export function updateSaPassword(payload: { currentPassword: string; newPassword
     body: JSON.stringify(payload),
   });
 }
+
+export type SaLeadInterest = "Hot" | "Warm" | "Cold" | "Converted";
+
+export interface SaLead {
+  id: string;
+  contactName: string;
+  businessName: string;
+  phone: string;
+  software: string;
+  renewalDate: string;
+  renewalSoon: boolean;
+  interest: SaLeadInterest;
+  assignedTo: string;
+  assignedInitials: string;
+  notes: string;
+  lastContact: string;
+}
+
+export interface SaLeadManager {
+  name: string;
+  initials: string;
+  leads: number;
+  hot: number;
+}
+
+export function fetchSaLeads(params?: { manager?: string; interest?: string }) {
+  const sp = new URLSearchParams();
+  if (params?.manager) sp.set("manager", params.manager);
+  if (params?.interest) sp.set("interest", params.interest);
+  const qs = sp.toString();
+  return request<{
+    leads: SaLead[];
+    managers: SaLeadManager[];
+    stats: { total: number; hot: number; converted: number; renewalSoon: number };
+    total: number;
+  }>(`/api/super-admin/leads${qs ? `?${qs}` : ""}`);
+}
+
+export function createSaLead(payload: {
+  contactName: string;
+  businessName: string;
+  phone: string;
+  software?: string;
+  renewalDate?: string;
+  assignedTo: string;
+  interest: SaLeadInterest;
+  notes?: string;
+}) {
+  return request<{ lead: SaLead }>("/api/super-admin/leads", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateSaLead(
+  id: string,
+  payload: Partial<{
+    contactName: string;
+    businessName: string;
+    phone: string;
+    software: string;
+    renewalDate: string;
+    renewalSoon: boolean;
+    assignedTo: string;
+    interest: SaLeadInterest;
+    notes: string;
+    touch: boolean;
+  }>,
+) {
+  return request<{ lead: SaLead }>(`/api/super-admin/leads/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteSaLead(id: string) {
+  return request<{ ok: boolean }>(`/api/super-admin/leads/${id}`, { method: "DELETE" });
+}
+
+export interface SaPlatformRole {
+  id: string;
+  name: string;
+  description: string;
+  permissions: string[];
+  memberCount: number;
+  members: { id: string; fullName: string; initials: string; email: string }[];
+}
+
+export interface SaTeamUser {
+  id: string;
+  fullName: string;
+  email: string;
+  roleName: string;
+  status: "Active" | "Inactive";
+  initials: string;
+  lastLogin: string;
+}
+
+export function fetchSaRoles() {
+  return request<{ roles: SaPlatformRole[]; permissions: string[] }>("/api/super-admin/team/roles");
+}
+
+export function createSaRole(payload: { name: string; description?: string; permissions: string[] }) {
+  return request<{ role: SaPlatformRole }>("/api/super-admin/team/roles", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateSaRole(
+  id: string,
+  payload: Partial<{ name: string; description: string; permissions: string[]; addMemberId: string }>,
+) {
+  return request<{ role: SaPlatformRole }>(`/api/super-admin/team/roles/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteSaRole(id: string) {
+  return request<{ ok: boolean }>(`/api/super-admin/team/roles/${id}`, { method: "DELETE" });
+}
+
+export function fetchSaTeamUsers() {
+  return request<{ users: SaTeamUser[] }>("/api/super-admin/team/users");
+}
+
+export function updateSaTeamUser(
+  id: string,
+  payload: Partial<{ status: "Active" | "Inactive"; roleName: string; fullName: string; resetCredentials: boolean }>,
+) {
+  return request<{
+    user: SaTeamUser;
+    credentials?: { email: string; temporaryPassword: string; message: string };
+  }>(`/api/super-admin/team/users/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}

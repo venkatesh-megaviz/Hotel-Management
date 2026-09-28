@@ -56,6 +56,12 @@ import * as saSupportId from "@/app/api/super-admin/support/[id]/route";
 import * as saSettings from "@/app/api/super-admin/settings/route";
 import * as saPassword from "@/app/api/super-admin/settings/password/route";
 import * as saLogin from "@/app/api/super-admin/auth/login/route";
+import * as saLeads from "@/app/api/super-admin/leads/route";
+import * as saLeadId from "@/app/api/super-admin/leads/[id]/route";
+import * as saRoles from "@/app/api/super-admin/team/roles/route";
+import * as saRoleId from "@/app/api/super-admin/team/roles/[id]/route";
+import * as saTeamUsers from "@/app/api/super-admin/team/users/route";
+import * as saTeamUserId from "@/app/api/super-admin/team/users/[id]/route";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -246,6 +252,26 @@ mountRoute(app, "patch", "/api/super-admin/settings", saSettings.PATCH);
 
 mountRoute(app, "options", "/api/super-admin/settings/password", saPassword.OPTIONS);
 mountRoute(app, "post", "/api/super-admin/settings/password", saPassword.POST);
+
+mountRoute(app, "options", "/api/super-admin/leads", saLeads.OPTIONS);
+mountRoute(app, "get", "/api/super-admin/leads", saLeads.GET);
+mountRoute(app, "post", "/api/super-admin/leads", saLeads.POST);
+mountRoute(app, "options", "/api/super-admin/leads/:id", saLeadId.OPTIONS);
+mountRoute(app, "patch", "/api/super-admin/leads/:id", saLeadId.PATCH, true);
+mountRoute(app, "delete", "/api/super-admin/leads/:id", saLeadId.DELETE, true);
+
+mountRoute(app, "options", "/api/super-admin/team/roles", saRoles.OPTIONS);
+mountRoute(app, "get", "/api/super-admin/team/roles", saRoles.GET);
+mountRoute(app, "post", "/api/super-admin/team/roles", saRoles.POST);
+mountRoute(app, "options", "/api/super-admin/team/roles/:id", saRoleId.OPTIONS);
+mountRoute(app, "patch", "/api/super-admin/team/roles/:id", saRoleId.PATCH, true);
+mountRoute(app, "delete", "/api/super-admin/team/roles/:id", saRoleId.DELETE, true);
+
+mountRoute(app, "options", "/api/super-admin/team/users", saTeamUsers.OPTIONS);
+mountRoute(app, "get", "/api/super-admin/team/users", saTeamUsers.GET);
+mountRoute(app, "post", "/api/super-admin/team/users", saTeamUsers.POST);
+mountRoute(app, "options", "/api/super-admin/team/users/:id", saTeamUserId.OPTIONS);
+mountRoute(app, "patch", "/api/super-admin/team/users/:id", saTeamUserId.PATCH, true);
 
 app.listen(port, () => {
   console.log(`HotelLite API listening on port ${port}`);

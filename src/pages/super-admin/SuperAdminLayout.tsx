@@ -1,14 +1,18 @@
 import { Outlet, useLocation } from "react-router-dom";
 import SuperAdminSidebar from "./SuperAdminSidebar";
 import SuperAdminTopbar from "./SuperAdminTopbar";
+import { platformDateLabel } from "./data";
 import "./SuperAdmin.css";
 
 const TITLES: Record<string, { title: string; subtitle?: string }> = {
   "/admin": { title: "Platform Overview" },
   "/admin/tenants": { title: "Tenant Management" },
   "/admin/subscriptions": { title: "Subscriptions & Billing" },
+  "/admin/modules": { title: "Module Usage" },
   "/admin/analytics": { title: "Analytics" },
   "/admin/support": { title: "Support Center" },
+  "/admin/leads": { title: "Dinevoro Platform", subtitle: platformDateLabel() },
+  "/admin/team": { title: "Dinevoro Platform", subtitle: platformDateLabel() },
   "/admin/settings": { title: "Platform Settings" },
 };
 

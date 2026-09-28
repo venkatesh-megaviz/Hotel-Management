@@ -9,6 +9,9 @@ import PlatformPlan, { type PlatformPlanDoc } from "@/models/PlatformPlan";
 import PlatformSettings, { type PlatformSettingsDoc } from "@/models/PlatformSettings";
 import SupportTicket from "@/models/SupportTicket";
 import SubscriptionEvent from "@/models/SubscriptionEvent";
+import SalesLead from "@/models/SalesLead";
+import PlatformRole from "@/models/PlatformRole";
+import PlatformTeamMember from "@/models/PlatformTeamMember";
 
 export const ALL_MODULES = [
   "Operations",
@@ -410,6 +413,182 @@ export async function ensurePlatformData() {
       { restaurantName: "Dosa Junction", event: "Downgrade", plan: "Basic", amount: "₹2,099/mo", tone: "danger", occurredAt: new Date("2024-07-11") },
       { restaurantName: "The Garden Café", event: "Trial Started", plan: "Classic", amount: "—", tone: "warning", occurredAt: new Date("2024-06-30") },
       { restaurantName: "Masala Express", event: "Trial Started", plan: "Basic", amount: "—", tone: "warning", occurredAt: new Date("2024-01-03") },
+    ]);
+  }
+
+  if ((await PlatformRole.countDocuments()) === 0) {
+    await PlatformRole.create({
+      name: "Marketing Manager",
+      description: "Owns outbound sales pipeline and lead conversion",
+      permissions: ["Dashboard", "Leads & CRM"],
+    });
+  }
+
+  if ((await PlatformTeamMember.countDocuments()) === 0) {
+    const now = Date.now();
+    await PlatformTeamMember.insertMany([
+      {
+        fullName: "Priya Sharma",
+        email: "priya@dinevor.in",
+        roleName: "Marketing Manager",
+        status: "Active",
+        initials: "PS",
+        lastLoginAt: new Date(now - 2 * 60 * 60 * 1000),
+      },
+      {
+        fullName: "Rahul Kumar",
+        email: "rahul@dinevor.in",
+        roleName: "Marketing Manager",
+        status: "Active",
+        initials: "RK",
+        lastLoginAt: new Date(now - 5 * 60 * 60 * 1000),
+      },
+      {
+        fullName: "Ananya Singh",
+        email: "ananya@dinevor.in",
+        roleName: "Marketing Manager",
+        status: "Active",
+        initials: "AS",
+        lastLoginAt: new Date(now - 24 * 60 * 60 * 1000),
+      },
+      {
+        fullName: "Neha Gupta",
+        email: "neha@dinevor.in",
+        roleName: "Marketing Manager",
+        status: "Active",
+        initials: "NG",
+        lastLoginAt: new Date(now - 3 * 24 * 60 * 60 * 1000),
+      },
+      {
+        fullName: "Vikram Patel",
+        email: "vikram@dinevor.in",
+        roleName: "Marketing Manager",
+        status: "Inactive",
+        initials: "VP",
+        lastLoginAt: new Date(now - 7 * 24 * 60 * 60 * 1000),
+      },
+      {
+        fullName: "Kiran Reddy",
+        email: "kiran@dinevor.in",
+        roleName: "Marketing Manager",
+        status: "Active",
+        initials: "KR",
+        lastLoginAt: new Date(now - 8 * 60 * 60 * 1000),
+      },
+    ]);
+  }
+
+  if ((await SalesLead.countDocuments()) === 0) {
+    const now = Date.now();
+    await SalesLead.insertMany([
+      {
+        contactName: "Amit Sharma",
+        businessName: "Taj Residency Dining",
+        phone: "+91 98765 12345",
+        software: "Petpooja",
+        renewalDate: "15 Oct 2024",
+        renewalSoon: true,
+        interest: "Hot",
+        assignedTo: "Priya Sharma",
+        assignedInitials: "PS",
+        lastContactAt: new Date(now - 2 * 24 * 60 * 60 * 1000),
+      },
+      {
+        contactName: "Ravi Bose",
+        businessName: "Mainland China",
+        phone: "+91 98200 44556",
+        software: "Torqus",
+        renewalDate: "02 Nov 2024",
+        renewalSoon: true,
+        interest: "Warm",
+        assignedTo: "Ananya Singh",
+        assignedInitials: "AS",
+        lastContactAt: new Date(now - 1 * 24 * 60 * 60 * 1000),
+      },
+      {
+        contactName: "Sneha Iyer",
+        businessName: "Café Madras",
+        phone: "+91 98840 11223",
+        software: "UrbanPiper",
+        renewalDate: "28 Oct 2024",
+        renewalSoon: true,
+        interest: "Hot",
+        assignedTo: "Kiran Reddy",
+        assignedInitials: "KR",
+        lastContactAt: new Date(now - 5 * 60 * 60 * 1000),
+      },
+      {
+        contactName: "Farhan Qureshi",
+        businessName: "Biryani House",
+        phone: "+91 98111 66778",
+        software: "eZee Burrp",
+        renewalDate: "12 Dec 2024",
+        renewalSoon: false,
+        interest: "Cold",
+        assignedTo: "Rahul Kumar",
+        assignedInitials: "RK",
+        lastContactAt: new Date(now - 6 * 24 * 60 * 60 * 1000),
+      },
+      {
+        contactName: "Meera Joshi",
+        businessName: "The Spice Route",
+        phone: "+91 97654 33221",
+        software: "Posist",
+        renewalDate: "08 Nov 2024",
+        renewalSoon: false,
+        interest: "Warm",
+        assignedTo: "Priya Sharma",
+        assignedInitials: "PS",
+        lastContactAt: new Date(now - 3 * 24 * 60 * 60 * 1000),
+      },
+      {
+        contactName: "Vikram Desai",
+        businessName: "Coastal Kitchen",
+        phone: "+91 98989 22110",
+        software: "Petpooja",
+        renewalDate: "20 Oct 2024",
+        renewalSoon: true,
+        interest: "Hot",
+        assignedTo: "Rahul Kumar",
+        assignedInitials: "RK",
+        lastContactAt: new Date(),
+      },
+      {
+        contactName: "Anita Rao",
+        businessName: "Dosa Corner",
+        phone: "+91 99001 55667",
+        software: "GoFrugal",
+        renewalDate: "05 Jan 2025",
+        renewalSoon: false,
+        interest: "Converted",
+        assignedTo: "Priya Sharma",
+        assignedInitials: "PS",
+        lastContactAt: new Date(now - 4 * 24 * 60 * 60 * 1000),
+      },
+      {
+        contactName: "Kabir Malhotra",
+        businessName: "Punjab Grill Express",
+        phone: "+91 98100 77889",
+        software: "Torqus",
+        renewalDate: "18 Nov 2024",
+        renewalSoon: false,
+        interest: "Warm",
+        assignedTo: "Ananya Singh",
+        assignedInitials: "AS",
+        lastContactAt: new Date(now - 12 * 60 * 60 * 1000),
+      },
+      {
+        contactName: "Divya Nair",
+        businessName: "Malabar Treats",
+        phone: "+91 97470 33445",
+        software: "UrbanPiper",
+        renewalDate: "30 Oct 2024",
+        renewalSoon: false,
+        interest: "Hot",
+        assignedTo: "Kiran Reddy",
+        assignedInitials: "KR",
+        lastContactAt: new Date(now - 8 * 60 * 60 * 1000),
+      },
     ]);
   }
 
