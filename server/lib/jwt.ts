@@ -1,7 +1,7 @@
 import "@/lib/env";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || "1234";
 export const JWT_COOKIE_NAME = process.env.JWT_COOKIE_NAME || "hotellite_token";
 
 if (!JWT_SECRET) {

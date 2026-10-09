@@ -1,7 +1,5 @@
 import Customer from "@/models/Customer";
-
 const SKIP_NAMES = new Set(["walk-in", "table guest", "online customer", ""]);
-
 export async function syncCustomerOnOrderPaid(
   restaurantId: string,
   customerName: string,
@@ -16,14 +14,12 @@ export async function syncCustomerOnOrderPaid(
     restaurant: restaurantId,
     name: { $regex: new RegExp(`^${normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
   });
-
   if (!customer) return;
 
   await Customer.findByIdAndUpdate(customer._id, {
     $inc: { totalVisits: 1, totalSpent: orderTotal },
   });
 }
-
 export function loyaltyEarned(totalSpent: number, redeemed: number) {
   let multiplier = 1;
   if (totalSpent >= 30000) multiplier = 3;

@@ -1,7 +1,7 @@
 import "@/lib/env";
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI! || "mongodb+srv://n210438_db_user:KnMREFlUS9ZkiK6M@cluster0.ofrrefo.mongodb.net/hotellite?retryWrites=true&w=majority"
 
 if (!MONGODB_URI) {
   throw new Error("Missing MONGODB_URI environment variable");
@@ -11,7 +11,6 @@ interface MongooseCache {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
 }
-
 declare global {
   // eslint-disable-next-line no-var
   var _mongooseCache: MongooseCache | undefined;

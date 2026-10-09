@@ -62,11 +62,25 @@ import * as saRoles from "@/app/api/super-admin/team/roles/route";
 import * as saRoleId from "@/app/api/super-admin/team/roles/[id]/route";
 import * as saTeamUsers from "@/app/api/super-admin/team/users/route";
 import * as saTeamUserId from "@/app/api/super-admin/team/users/[id]/route";
-
+import cors from "cors";
 const app = express();
 const port = Number(process.env.PORT) || 4000;
-
+const allowedOrigins = (process.env.FRONTEND_URL?.split(",") ?? [])
+  .map((o) => o.trim().replace(/\/+$/, ""))
+  .concat("http://localhost:5173");
 app.set("trust proxy", 1);
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      // allow non-browser tools (no origin) and whitelisted origins
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      cb(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 app.use(cookieParser());
 app.use(express.json());
 
@@ -79,9 +93,10 @@ mountRoute(app, "get", "/api/health", health.GET);
 
 mountRoute(app, "options", "/api/auth/register", register.OPTIONS);
 mountRoute(app, "post", "/api/auth/register", register.POST);
-
+mountRoute(app,"patch","/api/admin/subscription",register.Subscription_Route);
 mountRoute(app, "options", "/api/auth/login", login.OPTIONS);
 mountRoute(app, "post", "/api/auth/login", login.POST);
+
 
 mountRoute(app, "options", "/api/auth/me", me.OPTIONS);
 mountRoute(app, "get", "/api/auth/me", me.GET);
@@ -154,7 +169,13 @@ mountRoute(app, "delete", "/api/notifications", notifications.DELETE);
 
 mountRoute(app, "options", "/api/notifications/:id", notificationId.OPTIONS);
 mountRoute(app, "patch", "/api/notifications/:id", notificationId.PATCH, true);
-mountRoute(app, "delete", "/api/notifications/:id", notificationId.DELETE, true);
+mountRoute(
+  app,
+  "delete",
+  "/api/notifications/:id",
+  notificationId.DELETE,
+  true,
+);
 
 mountRoute(app, "options", "/api/tables", tables.OPTIONS);
 mountRoute(app, "get", "/api/tables", tables.GET);
@@ -188,13 +209,25 @@ mountRoute(app, "patch", "/api/ordering/online/:id", onlineOrderId.PATCH, true);
 mountRoute(app, "options", "/api/delivery/deliveries", deliveries.OPTIONS);
 mountRoute(app, "get", "/api/delivery/deliveries", deliveries.GET);
 mountRoute(app, "options", "/api/delivery/deliveries/:id", deliveryId.OPTIONS);
-mountRoute(app, "patch", "/api/delivery/deliveries/:id", deliveryId.PATCH, true);
+mountRoute(
+  app,
+  "patch",
+  "/api/delivery/deliveries/:id",
+  deliveryId.PATCH,
+  true,
+);
 
 mountRoute(app, "options", "/api/delivery/agents", deliveryAgents.OPTIONS);
 mountRoute(app, "get", "/api/delivery/agents", deliveryAgents.GET);
 mountRoute(app, "post", "/api/delivery/agents", deliveryAgents.POST);
 mountRoute(app, "options", "/api/delivery/agents/:id", deliveryAgentId.OPTIONS);
-mountRoute(app, "patch", "/api/delivery/agents/:id", deliveryAgentId.PATCH, true);
+mountRoute(
+  app,
+  "patch",
+  "/api/delivery/agents/:id",
+  deliveryAgentId.PATCH,
+  true,
+);
 
 mountRoute(app, "options", "/api/recipes", recipes.OPTIONS);
 mountRoute(app, "get", "/api/recipes", recipes.GET);
@@ -227,7 +260,13 @@ mountRoute(app, "get", "/api/super-admin/tenants", saTenants.GET);
 
 mountRoute(app, "options", "/api/super-admin/tenants/:id", saTenantId.OPTIONS);
 mountRoute(app, "get", "/api/super-admin/tenants/:id", saTenantId.GET, true);
-mountRoute(app, "patch", "/api/super-admin/tenants/:id", saTenantId.PATCH, true);
+mountRoute(
+  app,
+  "patch",
+  "/api/super-admin/tenants/:id",
+  saTenantId.PATCH,
+  true,
+);
 
 mountRoute(app, "options", "/api/super-admin/plans", saPlans.OPTIONS);
 mountRoute(app, "get", "/api/super-admin/plans", saPlans.GET);
@@ -244,13 +283,24 @@ mountRoute(app, "get", "/api/super-admin/support", saSupport.GET);
 mountRoute(app, "post", "/api/super-admin/support", saSupport.POST);
 
 mountRoute(app, "options", "/api/super-admin/support/:id", saSupportId.OPTIONS);
-mountRoute(app, "patch", "/api/super-admin/support/:id", saSupportId.PATCH, true);
+mountRoute(
+  app,
+  "patch",
+  "/api/super-admin/support/:id",
+  saSupportId.PATCH,
+  true,
+);
 
 mountRoute(app, "options", "/api/super-admin/settings", saSettings.OPTIONS);
 mountRoute(app, "get", "/api/super-admin/settings", saSettings.GET);
 mountRoute(app, "patch", "/api/super-admin/settings", saSettings.PATCH);
 
-mountRoute(app, "options", "/api/super-admin/settings/password", saPassword.OPTIONS);
+mountRoute(
+  app,
+  "options",
+  "/api/super-admin/settings/password",
+  saPassword.OPTIONS,
+);
 mountRoute(app, "post", "/api/super-admin/settings/password", saPassword.POST);
 
 mountRoute(app, "options", "/api/super-admin/leads", saLeads.OPTIONS);
@@ -264,14 +314,37 @@ mountRoute(app, "options", "/api/super-admin/team/roles", saRoles.OPTIONS);
 mountRoute(app, "get", "/api/super-admin/team/roles", saRoles.GET);
 mountRoute(app, "post", "/api/super-admin/team/roles", saRoles.POST);
 mountRoute(app, "options", "/api/super-admin/team/roles/:id", saRoleId.OPTIONS);
-mountRoute(app, "patch", "/api/super-admin/team/roles/:id", saRoleId.PATCH, true);
-mountRoute(app, "delete", "/api/super-admin/team/roles/:id", saRoleId.DELETE, true);
+mountRoute(
+  app,
+  "patch",
+  "/api/super-admin/team/roles/:id",
+  saRoleId.PATCH,
+  true,
+);
+mountRoute(
+  app,
+  "delete",
+  "/api/super-admin/team/roles/:id",
+  saRoleId.DELETE,
+  true,
+);
 
 mountRoute(app, "options", "/api/super-admin/team/users", saTeamUsers.OPTIONS);
 mountRoute(app, "get", "/api/super-admin/team/users", saTeamUsers.GET);
 mountRoute(app, "post", "/api/super-admin/team/users", saTeamUsers.POST);
-mountRoute(app, "options", "/api/super-admin/team/users/:id", saTeamUserId.OPTIONS);
-mountRoute(app, "patch", "/api/super-admin/team/users/:id", saTeamUserId.PATCH, true);
+mountRoute(
+  app,
+  "options",
+  "/api/super-admin/team/users/:id",
+  saTeamUserId.OPTIONS,
+);
+mountRoute(
+  app,
+  "patch",
+  "/api/super-admin/team/users/:id",
+  saTeamUserId.PATCH,
+  true,
+);
 
 app.listen(port, () => {
   console.log(`HotelLite API listening on port ${port}`);

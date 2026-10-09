@@ -10,7 +10,7 @@ import { serializeUser, serializeRestaurant } from "@/lib/serialize";
 import { ensureDemoAccount } from "@/lib/ensure-demo-account";
 import { SUPER_ADMIN_EMAIL } from "@/lib/super-admin";
 import { z } from "zod";
-
+import dayjs from "dayjs";
 const loginSchema = z.object({
   email: z.string().trim().email("Enter a valid email"),
   password: z.string().min(1, "Password is required"),
@@ -24,11 +24,14 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const parsed = loginSchema.safeParse(body);
-
+    let subscriptionWarning: string | null = null;
     if (!parsed.success) {
       return withCors(
         request,
-        jsonResponse({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400),
+        jsonResponse(
+          { error: parsed.error.issues[0]?.message ?? "Invalid input" },
+          400,
+        ),
       );
     }
 
@@ -39,10 +42,7 @@ export async function POST(request: Request) {
     if (email === SUPER_ADMIN_EMAIL.toLowerCase()) {
       return withCors(
         request,
-        jsonResponse(
-          { error: "Use the Admin login at /admin/login" },
-          403,
-        ),
+        jsonResponse({ error: "Use the Admin login at /admin/login" }, 403),
       );
     }
 
@@ -51,19 +51,46 @@ export async function POST(request: Request) {
       if (user.role === "SuperAdmin") {
         return withCors(
           request,
-          jsonResponse(
-            { error: "Use the Admin login at /admin/login" },
-            403,
-          ),
+          jsonResponse({ error: "Use the Admin login at /admin/login" }, 403),
         );
       }
 
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) {
-        return withCors(request, jsonResponse({ error: "Invalid email or password" }, 401));
+        return withCors(
+          request,
+          jsonResponse({ error: "Invalid email or password" }, 401),
+        );
+      }
+      if (user.role === "Owner" && user.subscriptionEndsAt) {
+        const now = dayjs();
+        const expiryDate = dayjs(user.subscriptionEndsAt);
+        const remainingDays = Math.ceil(expiryDate.diff(now, "day", true));
+
+        if (!expiryDate.isAfter(now)) {
+          return withCors(
+            request,
+            jsonResponse(
+              {
+                error: "Your subscription has expired. Please renew your plan.",
+                code: "SUBSCRIPTION_EXPIRED",
+                subscriptionEndsAt: user.subscriptionEndsAt,
+              },
+              403,
+            ),
+          );
+        }
+
+        if (remainingDays <= 4) {
+          subscriptionWarning = `Your subscription will end in ${remainingDays} ${
+            remainingDays === 1 ? "day" : "days"
+          }. Please renew your plan.`;
+        }
       }
 
-      const restaurant = (await Restaurant.findById(user.restaurant)) as RestaurantDoc | null;
+      const restaurant = (await Restaurant.findById(
+        user.restaurant,
+      )) as RestaurantDoc | null;
       if (!restaurant) {
         return withCors(
           request,
@@ -83,7 +110,13 @@ export async function POST(request: Request) {
             restaurant: serializeRestaurant(restaurant),
           },
           200,
-          [{ name: JWT_COOKIE_NAME, value: token, options: authCookieOptions(30 * 24 * 60 * 60) }],
+          [
+            {
+              name: JWT_COOKIE_NAME,
+              value: token,
+              options: authCookieOptions(30 * 24 * 60 * 60),
+            },
+          ],
         ),
       );
     }
@@ -101,13 +134,24 @@ export async function POST(request: Request) {
         {
           user: serializeUser(demo.user),
           restaurant: serializeRestaurant(demo.restaurant),
+          subscriptionWarning
         },
         200,
-        [{ name: JWT_COOKIE_NAME, value: token, options: authCookieOptions(30 * 24 * 60 * 60) }],
+        [
+          {
+            name: JWT_COOKIE_NAME,
+            value: token,
+            options: authCookieOptions(30 * 24 * 60 * 60),
+          
+          },
+        ],
       ),
     );
   } catch (err) {
     console.error("Login error:", err);
-    return withCors(request, jsonResponse({ error: "Something went wrong. Please try again." }, 500));
+    return withCors(
+      request,
+      jsonResponse({ error: "Something went wrong. Please try again." }, 500),
+    );
   }
 }

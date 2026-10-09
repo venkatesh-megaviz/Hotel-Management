@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/mongodb";
 import User, { type UserDoc } from "@/models/User";
 import Restaurant, { type RestaurantDoc } from "@/models/Restaurant";
-import { registerSchema } from "@/lib/validation";
+import { registerSchema, SubscriptionSchema } from "@/lib/validation";
 import { signToken, JWT_COOKIE_NAME } from "@/lib/jwt";
 import { withCors, corsPreflight } from "@/lib/cors";
 import { authCookieOptions } from "@/lib/auth-cookie";
@@ -90,5 +90,73 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error("Register error:", err);
     return withCors(request, jsonResponse({ error: "Something went wrong. Please try again." }, 500));
+  }
+}
+
+
+export async function Subscription_Route(request: Request) {
+  try {
+    const body = await request.json();
+    const parsed = SubscriptionSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return withCors(request,jsonResponse({error:parsed.error.issues[0]?.message ?? "Invalid input"},400),
+      );
+    }
+
+    const data = parsed.data;
+
+if (data.subscriptionEndsAt.getTime() <= Date.now()) {
+  return new Response(
+    JSON.stringify({ error: "Subscription end date must be in the future." }),
+    { status: 400, headers: { "Content-Type": "application/json" } },
+  );
+}
+    await connectToDatabase();
+    const admin = await User.findOne({email: data.email}).lean();
+
+    if (!admin) {
+      return withCors(request,jsonResponse({ error: "Admin email does not exist" }, 404));
+    }
+    const restaurant = await User.findOneAndUpdate({ email: data.restaurantEmail },
+      {
+        $set: {
+          subscriptionEndsAt: data.subscriptionEndsAt,
+        },
+      },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+      },
+    ).lean();
+
+    if (!restaurant) {
+      return withCors(
+        request,
+        jsonResponse({ error: "Restaurant not found" }, 404),
+      );
+    }
+
+    return withCors(
+      request,
+      jsonResponse(
+        {
+          message: "Subscription end date updated successfully",
+          restaurantEmail: restaurant.email,
+          subscriptionEndsAt: restaurant.subscriptionEndsAt,
+        },
+        200,
+      ),
+    );
+  } catch (error) {
+    console.error("Update subscription error:", error);
+
+    return withCors(
+      request,
+      jsonResponse(
+        { error: "Something went wrong. Please try again." },
+        500,
+      ),
+    );
   }
 }

@@ -35,7 +35,6 @@ const restaurantSchema = new Schema(
     invoiceTerms: { type: String, default: "" },
     showLogoOnInvoice: { type: Boolean, default: true },
     digitalSignature: { type: Boolean, default: false },
-
     tenantStatus: {
       type: String,
       enum: ["Active", "Trial", "Inactive"],
