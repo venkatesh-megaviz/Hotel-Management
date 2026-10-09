@@ -1,5 +1,5 @@
 /** Empty string = same-origin `/api/*` (Vercel proxy in prod, Vite proxy in dev). */
-const API_URL = import.meta.env.VITE_API_URL?.replace(/\/+$/, "") ?? "http://localhost:4000";
+const API_URL = import.meta.env.VITE_API_URL?.replace(/\/+$/, "") ?? "";
 
 export interface ApiUser {
   id: string;
