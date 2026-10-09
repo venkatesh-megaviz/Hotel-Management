@@ -10,6 +10,7 @@ const userSchema = new Schema(
       enum: ["Owner", "Manager", "Cashier", "Kitchen Staff", "SuperAdmin"],
       default: "Owner",
     },
+    subscriptionEndsAt: {type: Date},
     restaurant: { type: Schema.Types.ObjectId, ref: "Restaurant" },
   },
   { timestamps: true },

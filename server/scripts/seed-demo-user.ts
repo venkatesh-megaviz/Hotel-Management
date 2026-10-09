@@ -19,7 +19,6 @@ import {
   seedDefaultStaff,
   seedDefaultNotifications,
 } from "@/lib/seed-demo-data";
-
 const DEMO = {
   fullName: "Arjun Mehta",
   email: "arjun@spicegarden.com",

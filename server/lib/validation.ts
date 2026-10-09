@@ -13,6 +13,12 @@ export const registerSchema = z.object({
   billingCycle: z.enum(["Monthly", "Annual"]).default("Monthly"),
 });
 
+export const SubscriptionSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Enter a valid admin email"),
+  restaurantEmail: z.string().trim().toLowerCase().email("Enter a valid restaurant email"),
+  subscriptionEndsAt: z.coerce.date({error: "Enter a valid subscription end date"}),
+});
+
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email"),
   password: z.string().min(1, "Password is required"),
