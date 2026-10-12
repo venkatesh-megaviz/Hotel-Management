@@ -93,7 +93,8 @@ mountRoute(app, "get", "/api/health", health.GET);
 
 mountRoute(app, "options", "/api/auth/register", register.OPTIONS);
 mountRoute(app, "post", "/api/auth/register", register.POST);
-mountRoute(app,"patch","/api/admin/subscription",register.Subscription_Route);
+mountRoute(app, "options", "/api/admin/subscription", register.OPTIONS);
+mountRoute(app, "patch", "/api/admin/subscription", register.Subscription_Route);
 mountRoute(app, "options", "/api/auth/login", login.OPTIONS);
 mountRoute(app, "post", "/api/auth/login", login.POST);
 

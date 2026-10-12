@@ -11,7 +11,15 @@ import { serializeUser, serializeRestaurant } from "@/lib/serialize";
 import { seedDefaultTables } from "@/lib/seed-tables";
 import { seedDefaultAgents, seedDemoChannelOrders } from "@/lib/seed-channel-orders";
 import { seedKitchenOrders } from "@/lib/seed-kitchen-orders";
-import { seedDefaultMenuItems, seedDefaultInventory, seedDefaultCustomers, seedDefaultRecipes, seedDefaultExpenses, seedDefaultStaff, seedDefaultNotifications } from "@/lib/seed-demo-data";
+import {
+  seedDefaultMenuItems,
+  seedDefaultInventory,
+  seedDefaultCustomers,
+  seedDefaultRecipes,
+  seedDefaultExpenses,
+  seedDefaultStaff,
+  seedDefaultNotifications,
+} from "@/lib/seed-demo-data";
 
 export async function OPTIONS(request: Request) {
   return corsPreflight(request);
@@ -93,48 +101,40 @@ export async function POST(request: Request) {
   }
 }
 
-
+/**
+ * Configure a restaurant owner's subscription end date.
+ * Body: { email: superAdminEmail, restaurantEmail, subscriptionEndsAt }
+ * - Past / today dates expire access (valid through end of that calendar day)
+ * - Future dates grant access until that day ends (e.g. +30 days for a company)
+ */
 export async function Subscription_Route(request: Request) {
   try {
     const body = await request.json();
     const parsed = SubscriptionSchema.safeParse(body);
 
     if (!parsed.success) {
-      return withCors(request,jsonResponse({error:parsed.error.issues[0]?.message ?? "Invalid input"},400),
+      return withCors(
+        request,
+        jsonResponse({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, 400),
       );
     }
 
     const data = parsed.data;
-
-if (data.subscriptionEndsAt.getTime() <= Date.now()) {
-  return new Response(
-    JSON.stringify({ error: "Subscription end date must be in the future." }),
-    { status: 400, headers: { "Content-Type": "application/json" } },
-  );
-}
     await connectToDatabase();
-    const admin = await User.findOne({email: data.email}).lean();
 
-    if (!admin) {
-      return withCors(request,jsonResponse({ error: "Admin email does not exist" }, 404));
+    const admin = (await User.findOne({ email: data.email })) as UserDoc | null;
+    if (!admin || admin.role !== "SuperAdmin") {
+      return withCors(request, jsonResponse({ error: "Super admin email is required" }, 403));
     }
-    const restaurant = await User.findOneAndUpdate({ email: data.restaurantEmail },
-      {
-        $set: {
-          subscriptionEndsAt: data.subscriptionEndsAt,
-        },
-      },
-      {
-        returnDocument: 'after',
-        runValidators: true,
-      },
+
+    const owner = await User.findOneAndUpdate(
+      { email: data.restaurantEmail, role: { $ne: "SuperAdmin" } },
+      { $set: { subscriptionEndsAt: data.subscriptionEndsAt } },
+      { new: true, runValidators: true },
     ).lean();
 
-    if (!restaurant) {
-      return withCors(
-        request,
-        jsonResponse({ error: "Restaurant not found" }, 404),
-      );
+    if (!owner) {
+      return withCors(request, jsonResponse({ error: "Restaurant owner not found" }, 404));
     }
 
     return withCors(
@@ -142,21 +142,14 @@ if (data.subscriptionEndsAt.getTime() <= Date.now()) {
       jsonResponse(
         {
           message: "Subscription end date updated successfully",
-          restaurantEmail: restaurant.email,
-          subscriptionEndsAt: restaurant.subscriptionEndsAt,
+          restaurantEmail: owner.email,
+          subscriptionEndsAt: owner.subscriptionEndsAt,
         },
         200,
       ),
     );
   } catch (error) {
     console.error("Update subscription error:", error);
-
-    return withCors(
-      request,
-      jsonResponse(
-        { error: "Something went wrong. Please try again." },
-        500,
-      ),
-    );
+    return withCors(request, jsonResponse({ error: "Something went wrong. Please try again." }, 500));
   }
 }

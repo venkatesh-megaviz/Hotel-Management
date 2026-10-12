@@ -64,10 +64,11 @@ export async function POST(request: Request) {
       }
       if (user.role === "Owner" && user.subscriptionEndsAt) {
         const now = dayjs();
-        const expiryDate = dayjs(user.subscriptionEndsAt);
-        const remainingDays = Math.ceil(expiryDate.diff(now, "day", true));
+        // Access is valid through the end of the subscription calendar day.
+        const expiryEnd = dayjs(user.subscriptionEndsAt).endOf("day");
+        const remainingDays = Math.max(0, Math.ceil(expiryEnd.diff(now, "day", true)));
 
-        if (!expiryDate.isAfter(now)) {
+        if (now.isAfter(expiryEnd)) {
           return withCors(
             request,
             jsonResponse(
