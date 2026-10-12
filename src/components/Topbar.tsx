@@ -9,6 +9,7 @@ import {
   Users,
   Grid3X3,
   X,
+  Menu,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -27,6 +28,7 @@ interface TopbarProps {
   title: string;
   subtitle?: string;
   greeting?: boolean;
+  onMenuClick?: () => void;
 }
 
 type SearchResult = {
@@ -44,7 +46,7 @@ function getGreeting() {
   return "Good evening";
 }
 
-export default function Topbar({ title, subtitle, greeting }: TopbarProps) {
+export default function Topbar({ title, subtitle, greeting, onMenuClick }: TopbarProps) {
   const { user, restaurant } = useAuth();
   const navigate = useNavigate();
   const userName = user?.fullName ?? "Guest";
@@ -223,23 +225,33 @@ export default function Topbar({ title, subtitle, greeting }: TopbarProps) {
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-slate-100 bg-white/80 px-4 backdrop-blur sm:px-8 print:hidden">
-      <div>
-        {greeting ? (
-          <>
-            <h1 className="text-lg font-bold text-slate-900">
-              {getGreeting()}, {userName.split(" ")[0]}!
-            </h1>
-            <p className="hidden items-center gap-1.5 text-xs text-slate-400 sm:flex">
-              <Calendar size={12} />
-              {today} · {restaurantName}
-            </p>
-          </>
-        ) : (
-          <>
-            <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
-            {subtitle && <p className="hidden text-xs text-slate-400 sm:block">{subtitle}</p>}
-          </>
-        )}
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          className="shrink-0 rounded-xl p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+          aria-label="Open menu"
+        >
+          <Menu size={20} />
+        </button>
+        <div className="min-w-0">
+          {greeting ? (
+            <>
+              <h1 className="truncate text-lg font-bold text-slate-900">
+                {getGreeting()}, {userName.split(" ")[0]}!
+              </h1>
+              <p className="hidden items-center gap-1.5 text-xs text-slate-400 sm:flex">
+                <Calendar size={12} />
+                {today} · {restaurantName}
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="truncate text-lg font-semibold text-slate-900">{title}</h1>
+              {subtitle && <p className="hidden text-xs text-slate-400 sm:block">{subtitle}</p>}
+            </>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

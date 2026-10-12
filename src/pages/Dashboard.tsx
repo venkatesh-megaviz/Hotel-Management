@@ -7,8 +7,6 @@ import {
   CircleDollarSign,
   Grid3X3,
   ChefHat,
-  QrCode,
-  Globe,
   Truck,
   Star,
   UserCheck,
@@ -88,14 +86,6 @@ const LIVE_STATUS = [
     valueColor: "text-slate-900",
   },
   {
-    label: "Online Orders",
-    getMain: (d: DashboardData) => `${d.liveStatus.onlineOrders} pending`,
-    sub: () => "Swiggy - Zomato - Web",
-    icon: Globe,
-    iconBg: "bg-[#F5F3FF] text-[#7C3AED]",
-    valueColor: "text-[#7C3AED]",
-  },
-  {
     label: "Active Deliveries",
     getMain: (d: DashboardData) => `${d.liveStatus.activeDeliveries} out`,
     sub: (d: DashboardData) => `${d.liveStatus.pendingAssign} pending assign`,
@@ -108,8 +98,6 @@ const LIVE_STATUS = [
 const QUICK_LINKS = [
   { to: "/tables", label: "Tables", icon: Grid3X3, bg: "bg-[#d6a351]" },
   { to: "/kitchen", label: "Kitchen", icon: ChefHat, bg: "bg-[#FE9A00]" },
-  { to: "/qr-ordering", label: "QR Order", icon: QrCode, bg: "bg-[#7C3AED]" },
-  { to: "/online-ordering", label: "Online", icon: Globe, bg: "bg-[#0D9488]" },
   { to: "/delivery", label: "Delivery", icon: Truck, bg: "bg-[#009966]" },
   { to: "/loyalty", label: "Loyalty", icon: Star, bg: "bg-[#DB2777]" },
   { to: "/attendance", label: "Attendance", icon: UserCheck, bg: "bg-[#4338CA]" },

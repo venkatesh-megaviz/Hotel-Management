@@ -19,10 +19,8 @@ import {
   Settings,
   LogOut,
   Bell,
-  QrCode,
-  Globe,
   Truck,
-  Shield,
+  X,
 } from "lucide-react";
 import clsx from "clsx";
 import { fetchNotifications } from "@/lib/api";
@@ -40,11 +38,7 @@ const navSections = [
   },
   {
     title: "Ordering",
-    items: [
-      { to: "/qr-ordering", label: "QR Ordering", icon: QrCode },
-      { to: "/online-ordering", label: "Online Ordering", icon: Globe },
-      { to: "/delivery", label: "Delivery", icon: Truck },
-    ],
+    items: [{ to: "/delivery", label: "Delivery", icon: Truck }],
   },
   {
     title: "Menu & Stock",
@@ -78,12 +72,16 @@ const navSections = [
     items: [
       { to: "/notifications", label: "Notifications", icon: Bell, badge: true },
       { to: "/settings", label: "Settings", icon: Settings },
-      { to: "/admin", label: "Super Admin", icon: Shield },
     ],
   },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const { user, restaurant, logout } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -94,18 +92,45 @@ export default function Sidebar() {
       .catch(() => undefined);
   }, []);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
+
   async function handleSignOut() {
+    onClose?.();
     await logout();
     navigate("/login", { replace: true });
   }
 
-  return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 shrink-0 flex-col overflow-hidden bg-[rgba(10,8,7,1)] lg:flex print:hidden">
-      <div className="border-b border-white/10 px-4 py-4">
-        <Link to="/app" className="inline-flex items-center px-1">
-          <img src="/sidebar-logo.png" alt="Dinevoro" className="h-7 w-auto max-w-[160px] object-contain" />
-        </Link>
-        <p className="mt-2 truncate px-0.5 text-[10px] text-white/45">{restaurant?.name ?? "Your Restaurant"}</p>
+  const panel = (
+    <aside
+      className={clsx(
+        "flex h-full w-56 shrink-0 flex-col overflow-hidden bg-[rgba(10,8,7,1)]",
+        "fixed inset-y-0 left-0 z-50 transition-transform duration-200 ease-out lg:translate-x-0",
+        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        "print:hidden",
+      )}
+    >
+      <div className="flex items-start justify-between border-b border-white/10 px-4 py-4">
+        <div className="min-w-0">
+          <Link to="/app" className="inline-flex items-center px-1" onClick={onClose}>
+            <img src="/sidebar-logo.png" alt="Dinevoro" className="h-7 w-auto max-w-[160px] object-contain" />
+          </Link>
+          <p className="mt-2 truncate px-0.5 text-[10px] text-white/45">{restaurant?.name ?? "Your Restaurant"}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg p-1.5 text-white/55 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
+          aria-label="Close menu"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       <nav className="flex-1 space-y-4 overflow-y-auto px-2 pt-3">
@@ -118,6 +143,7 @@ export default function Sidebar() {
                   key={`${to}-${label}`}
                   to={to}
                   end={"end" in rest ? rest.end : false}
+                  onClick={onClose}
                   className={({ isActive }) =>
                     clsx(
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
@@ -160,5 +186,19 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {mobileOpen && (
+        <button
+          type="button"
+          aria-label="Close menu overlay"
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden print:hidden"
+          onClick={onClose}
+        />
+      )}
+      {panel}
+    </>
   );
 }

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
@@ -6,8 +7,6 @@ const titles: Record<string, { title: string; subtitle?: string }> = {
   "/app": { title: "Dashboard" },
   "/tables": { title: "Table Management" },
   "/kitchen": { title: "Kitchen Display System", subtitle: "Real-time order queue for the kitchen" },
-  "/qr-ordering": { title: "QR Ordering", subtitle: "Manage table QR code orders" },
-  "/online-ordering": { title: "Online Ordering", subtitle: "Swiggy, Zomato and website orders" },
   "/delivery": { title: "Delivery Management", subtitle: "Track agents and live deliveries" },
   "/menu": { title: "Menu Management", subtitle: "Categories, pricing, GST, and availability" },
   "/recipes": { title: "Recipe Management", subtitle: "Manage recipes, ingredients and food cost" },
@@ -27,16 +26,26 @@ const titles: Record<string, { title: string; subtitle?: string }> = {
 
 export default function DashboardLayout() {
   const location = useLocation();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const meta = location.pathname.startsWith("/billing")
     ? titles["/billing"]
     : (titles[location.pathname] ?? { title: "Dinevoro" });
   const isDashboard = location.pathname === "/app";
 
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
+
   return (
     <div className="flex h-screen overflow-hidden bg-surface print:h-auto print:overflow-visible">
-      <Sidebar />
+      <Sidebar mobileOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden print:overflow-visible lg:ml-56">
-        <Topbar title={meta.title} subtitle={meta.subtitle} greeting={isDashboard} />
+        <Topbar
+          title={meta.title}
+          subtitle={meta.subtitle}
+          greeting={isDashboard}
+          onMenuClick={() => setMobileNavOpen(true)}
+        />
         <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 print:overflow-visible print:p-0">
           <Outlet />
         </main>
