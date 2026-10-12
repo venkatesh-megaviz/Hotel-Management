@@ -65,16 +65,28 @@ import * as saTeamUserId from "@/app/api/super-admin/team/users/[id]/route";
 import cors from "cors";
 const app = express();
 const port = Number(process.env.PORT) || 4000;
-const allowedOrigins = (process.env.FRONTEND_URL?.split(",") ?? [])
-  .map((o) => o.trim().replace(/\/+$/, ""))
-  .concat("http://localhost:5173");
+const DEFAULT_FRONTEND_ORIGINS = [
+  "http://localhost:5173",
+  "https://dinevoro.com",
+  "https://www.dinevoro.com",
+  "https://dinevoro.vercel.app",
+];
+const allowedOrigins = [
+  ...new Set(
+    (process.env.FRONTEND_URL?.split(",") ?? [])
+      .map((o) => o.trim().replace(/\/+$/, ""))
+      .filter(Boolean)
+      .concat(DEFAULT_FRONTEND_ORIGINS),
+  ),
+];
 app.set("trust proxy", 1);
 app.use(
   cors({
     origin: (origin, cb) => {
-      // allow non-browser tools (no origin) and whitelisted origins
+      // Allow non-browser tools (no Origin) and whitelisted frontends.
+      // Never throw — cors package turns thrown errors into Express 500 HTML.
       if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-      cb(new Error("Not allowed by CORS"));
+      return cb(null, false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

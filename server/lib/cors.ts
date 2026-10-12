@@ -1,6 +1,11 @@
 import { emptyResponse } from "@/lib/response";
 
-const DEFAULT_ORIGINS = ["http://localhost:5173"];
+const DEFAULT_ORIGINS = [
+  "http://localhost:5173",
+  "https://dinevoro.com",
+  "https://www.dinevoro.com",
+  "https://dinevoro.vercel.app",
+];
 
 function normalizeOrigin(value: string) {
   try {

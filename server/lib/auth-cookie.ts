@@ -2,7 +2,9 @@ export function authCookieOptions(maxAge: number) {
   const isProduction = process.env.NODE_ENV === "production";
   const frontendUrl = process.env.FRONTEND_URL?.trim() ?? "";
   const usesSameOriginProxy =
-    frontendUrl.includes("vercel.app") || frontendUrl.includes("netlify.app");
+    frontendUrl.includes("vercel.app") ||
+    frontendUrl.includes("netlify.app") ||
+    frontendUrl.includes("dinevoro.com");
   const sameSiteNone =
     isProduction && frontendUrl.startsWith("http") && !usesSameOriginProxy;
 
