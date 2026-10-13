@@ -7,7 +7,6 @@ const titles: Record<string, { title: string; subtitle?: string }> = {
   "/app": { title: "Dashboard" },
   "/tables": { title: "Table Management" },
   "/kitchen": { title: "Kitchen Display System", subtitle: "Real-time order queue for the kitchen" },
-  "/delivery": { title: "Delivery Management", subtitle: "Track agents and live deliveries" },
   "/menu": { title: "Menu Management", subtitle: "Categories, pricing, GST, and availability" },
   "/recipes": { title: "Recipe Management", subtitle: "Manage recipes, ingredients and food cost" },
   "/billing": { title: "Billing / POS", subtitle: "Create bills, collect payment, share invoices" },

@@ -7,7 +7,6 @@ import {
   CircleDollarSign,
   Grid3X3,
   ChefHat,
-  Truck,
   Star,
   UserCheck,
   Calculator,
@@ -85,20 +84,11 @@ const LIVE_STATUS = [
     iconBg: "bg-[#FFF7ED] text-[#FE9A00]",
     valueColor: "text-slate-900",
   },
-  {
-    label: "Active Deliveries",
-    getMain: (d: DashboardData) => `${d.liveStatus.activeDeliveries} out`,
-    sub: (d: DashboardData) => `${d.liveStatus.pendingAssign} pending assign`,
-    icon: Truck,
-    iconBg: "bg-[#ECFDF5] text-[#009966]",
-    valueColor: "text-[#009966]",
-  },
 ] as const;
 
 const QUICK_LINKS = [
   { to: "/tables", label: "Tables", icon: Grid3X3, bg: "bg-[#d6a351]" },
   { to: "/kitchen", label: "Kitchen", icon: ChefHat, bg: "bg-[#FE9A00]" },
-  { to: "/delivery", label: "Delivery", icon: Truck, bg: "bg-[#009966]" },
   { to: "/loyalty", label: "Loyalty", icon: Star, bg: "bg-[#DB2777]" },
   { to: "/attendance", label: "Attendance", icon: UserCheck, bg: "bg-[#4338CA]" },
   { to: "/accounting", label: "Accounting", icon: Calculator, bg: "bg-[#DC2626]" },

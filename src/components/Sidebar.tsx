@@ -19,7 +19,6 @@ import {
   Settings,
   LogOut,
   Bell,
-  Truck,
   X,
 } from "lucide-react";
 import clsx from "clsx";
@@ -35,10 +34,6 @@ const navSections = [
       { to: "/billing", label: "Billing", icon: Receipt },
       { to: "/payments", label: "Payments", icon: CreditCard },
     ],
-  },
-  {
-    title: "Ordering",
-    items: [{ to: "/delivery", label: "Delivery", icon: Truck }],
   },
   {
     title: "Menu & Stock",
