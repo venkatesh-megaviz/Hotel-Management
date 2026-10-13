@@ -4,7 +4,8 @@ export function authCookieOptions(maxAge: number) {
   const usesSameOriginProxy =
     frontendUrl.includes("vercel.app") ||
     frontendUrl.includes("netlify.app") ||
-    frontendUrl.includes("dinevoro.com");
+    frontendUrl.includes("dinevoro.com") ||
+    frontendUrl.includes("hotel-management");
   const sameSiteNone =
     isProduction && frontendUrl.startsWith("http") && !usesSameOriginProxy;
 
