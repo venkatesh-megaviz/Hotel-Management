@@ -5,6 +5,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
   throw new Error("Missing MONGODB_URI environment variable");
 }
+const mongoUri: string = MONGODB_URI;
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -34,7 +35,7 @@ export async function connectToDatabase() {
 
   if (!cache.promise) {
     cache.promise = mongoose
-      .connect(MONGODB_URI, {
+      .connect(mongoUri, {
         bufferCommands: false,
         serverSelectionTimeoutMS: 15000,
       })
