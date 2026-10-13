@@ -1,8 +1,12 @@
 import { jsonResponse } from "@/lib/response";
 import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/mongodb";
-import User, { type UserDoc } from "@/models/User";
-import Restaurant, { type RestaurantDoc } from "@/models/Restaurant";
+import UserImport, { type UserDoc } from "@/models/User";
+import RestaurantImport, { type RestaurantDoc } from "@/models/Restaurant";
+import { resolveModel } from "@/lib/resolve-model";
+
+const User = resolveModel(UserImport);
+const Restaurant = resolveModel(RestaurantImport);
 import { signToken, JWT_COOKIE_NAME } from "@/lib/jwt";
 import { withCors, corsPreflight } from "@/lib/cors";
 import { authCookieOptions } from "@/lib/auth-cookie";
@@ -151,9 +155,22 @@ export async function POST(request: Request) {
     );
   } catch (err) {
     console.error("Login error:", err);
+    const message = err instanceof Error ? err.message : "";
+    const dbBlocked =
+      message.includes("whitelist") ||
+      message.includes("ServerSelectionError") ||
+      message.includes("Could not connect to any servers");
     return withCors(
       request,
-      jsonResponse({ error: "Something went wrong. Please try again." }, 500),
+      jsonResponse(
+        {
+          error: dbBlocked
+            ? "Database unavailable. Allow Render IPs in MongoDB Atlas Network Access (0.0.0.0/0), then retry."
+            : "Something went wrong. Please try again.",
+          code: dbBlocked ? "DB_UNAVAILABLE" : "LOGIN_FAILED",
+        },
+        500,
+      ),
     );
   }
 }

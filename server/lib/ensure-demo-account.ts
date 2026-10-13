@@ -1,6 +1,10 @@
 import bcrypt from "bcryptjs";
-import User, { type UserDoc } from "@/models/User";
-import Restaurant, { type RestaurantDoc } from "@/models/Restaurant";
+import UserImport, { type UserDoc } from "@/models/User";
+import RestaurantImport, { type RestaurantDoc } from "@/models/Restaurant";
+import { resolveModel } from "@/lib/resolve-model";
+
+const User = resolveModel(UserImport);
+const Restaurant = resolveModel(RestaurantImport);
 import { seedDefaultTables } from "@/lib/seed-tables";
 import { seedDefaultAgents, seedDemoChannelOrders } from "@/lib/seed-channel-orders";
 import { seedKitchenOrders } from "@/lib/seed-kitchen-orders";

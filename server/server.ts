@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import { mountRoute } from "@/lib/express-adapter";
 
 import * as health from "@/app/api/health/route";
+import * as healthDb from "@/app/api/health/db/route";
 import * as register from "@/app/api/auth/register/route";
 import * as login from "@/app/api/auth/login/route";
 import * as me from "@/app/api/auth/me/route";
@@ -103,6 +104,8 @@ app.get("/", (_req, res) => {
 
 mountRoute(app, "options", "/api/health", health.OPTIONS);
 mountRoute(app, "get", "/api/health", health.GET);
+mountRoute(app, "options", "/api/health/db", healthDb.OPTIONS);
+mountRoute(app, "get", "/api/health/db", healthDb.GET);
 
 mountRoute(app, "options", "/api/auth/register", register.OPTIONS);
 mountRoute(app, "post", "/api/auth/register", register.POST);
