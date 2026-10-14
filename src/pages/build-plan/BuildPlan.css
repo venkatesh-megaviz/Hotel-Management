@@ -918,6 +918,32 @@
   box-shadow: 0 0 0 3px rgba(214, 163, 81, 0.18);
 }
 
+.bp-password-wrap {
+  position: relative;
+}
+
+.bp-password-wrap input {
+  padding-right: 42px;
+}
+
+.bp-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: rgba(10, 8, 7, 0.4);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.bp-password-toggle:hover {
+  color: rgba(10, 8, 7, 0.7);
+}
+
 .bp-secure {
   margin: 14px 0 0;
   display: flex;

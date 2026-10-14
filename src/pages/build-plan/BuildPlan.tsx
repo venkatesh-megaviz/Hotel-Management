@@ -8,6 +8,8 @@ import {
   Globe,
   LayoutGrid,
   LineChart,
+  Eye,
+  EyeOff,
   Lock,
   Receipt,
   Sparkles,
@@ -27,9 +29,6 @@ const TYPE_TO_BUSINESS: Record<string, string> = {
   "cloud-kitchen": "Cloud Kitchen",
   "hotel-fnb": "Restaurant",
 };
-
-/** Trial accounts created from the website use this temporary password. */
-const TRIAL_PASSWORD = "Demo@1234";
 
 const IMG = "/website-images";
 
@@ -286,11 +285,14 @@ export default function BuildPlan() {
   const [selected, setSelected] = useState<ModuleId[]>([...PLANS[2].modules]);
   const [activating, setActivating] = useState(false);
   const [activateError, setActivateError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
     name: "",
     restaurant: "",
     email: "",
     phone: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const activePlan = PLANS.find((p) => p.id === selectedPlan) ?? PLANS[2];
@@ -315,6 +317,17 @@ export default function BuildPlan() {
   async function handleActivate(e: React.FormEvent) {
     e.preventDefault();
     setActivateError(null);
+
+    const password = form.password;
+    if (password.length < 8) {
+      setActivateError("Password must be at least 8 characters");
+      return;
+    }
+    if (password !== form.confirmPassword) {
+      setActivateError("Passwords do not match");
+      return;
+    }
+
     setActivating(true);
 
     const phoneDigits = form.phone.replace(/\D/g, "");
@@ -324,7 +337,7 @@ export default function BuildPlan() {
       await register({
         fullName: form.name.trim(),
         email: form.email.trim(),
-        password: TRIAL_PASSWORD,
+        password,
         restaurantName: form.restaurant.trim(),
         businessType: TYPE_TO_BUSINESS[restaurantType ?? ""] ?? "Restaurant",
         city: "India",
@@ -337,17 +350,12 @@ export default function BuildPlan() {
       const message = err instanceof ApiError ? err.message : "";
       if (/already exists/i.test(message)) {
         try {
-          await login(form.email.trim(), TRIAL_PASSWORD);
+          await login(form.email.trim(), password);
           navigate("/app");
           return;
         } catch {
-          try {
-            await login(form.email.trim(), "x");
-            navigate("/app");
-            return;
-          } catch {
-            /* fall through */
-          }
+          setActivateError("An account with this email already exists. Sign in with your password on the login page.");
+          return;
         }
       }
       setActivateError(message || "Could not activate trial. Please try again.");
@@ -680,6 +688,40 @@ export default function BuildPlan() {
                       value={form.phone}
                       onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
                       placeholder="+91 98765 43210"
+                    />
+                  </label>
+                  <label>
+                    Password
+                    <div className="bp-password-wrap">
+                      <input
+                        required
+                        type={showPassword ? "text" : "password"}
+                        minLength={8}
+                        autoComplete="new-password"
+                        value={form.password}
+                        onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                        placeholder="Create a password (min. 8 characters)"
+                      />
+                      <button
+                        type="button"
+                        className="bp-password-toggle"
+                        onClick={() => setShowPassword((v) => !v)}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </label>
+                  <label>
+                    Confirm Password
+                    <input
+                      required
+                      type={showPassword ? "text" : "password"}
+                      minLength={8}
+                      autoComplete="new-password"
+                      value={form.confirmPassword}
+                      onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                      placeholder="Re-enter your password"
                     />
                   </label>
                   {activateError && <p className="bp-activate-error">{activateError}</p>}
