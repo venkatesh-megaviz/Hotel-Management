@@ -8,18 +8,15 @@ import Expense from "@/models/Expense";
 import AccountingSettings from "@/models/AccountingSettings";
 import { seedDefaultExpenses } from "@/lib/seed-demo-data";
 import { notify } from "@/lib/notify";
-
 const INTEGRATION_META = [
   { id: "tally", name: "Tally Prime", description: "Export ledger, sales, purchase entries to Tally", icon: "T" },
   { id: "quickbooks", name: "QuickBooks", description: "Sync invoices and expenses with QuickBooks Online", icon: "Q" },
   { id: "zoho", name: "Zoho Books", description: "Auto-sync billing data with Zoho accounting", icon: "Z" },
   { id: "bank", name: "Bank Account", description: "Reconcile UPI/NEFT transactions automatically", icon: "₹" },
 ] as const;
-
 function monthLabel(date: Date) {
   return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
-
 function buildMonthlyPl(restaurantId: string, monthsBack = 6) {
   return Array.from({ length: monthsBack }, (_, i) => {
     const d = new Date();

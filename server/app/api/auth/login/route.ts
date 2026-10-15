@@ -15,11 +15,9 @@ const loginSchema = z.object({
   email: z.string().trim().email("Enter a valid email"),
   password: z.string().min(1, "Password is required"),
 });
-
 export async function OPTIONS(request: Request) {
   return corsPreflight(request);
 }
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -34,18 +32,15 @@ export async function POST(request: Request) {
         ),
       );
     }
-
     const email = parsed.data.email.toLowerCase();
     const { password } = parsed.data;
     await connectToDatabase();
-
     if (email === SUPER_ADMIN_EMAIL.toLowerCase()) {
       return withCors(
         request,
         jsonResponse({ error: "Use the Admin login at /admin/login" }, 403),
       );
     }
-
     const user = (await User.findOne({ email })) as UserDoc | null;
     if (user) {
       if (user.role === "SuperAdmin") {
@@ -54,7 +49,6 @@ export async function POST(request: Request) {
           jsonResponse({ error: "Use the Admin login at /admin/login" }, 403),
         );
       }
-
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) {
         return withCors(
@@ -82,9 +76,19 @@ export async function POST(request: Request) {
         }
 
         if (remainingDays <= 4) {
-          subscriptionWarning = `Your subscription will end in ${remainingDays} ${
+           return withCors(
+            request,
+            jsonResponse(
+              {
+                error: `Your subscription will end in ${remainingDays} ${
             remainingDays === 1 ? "day" : "days"
-          }. Please renew your plan.`;
+          }. Please renew your plan.`,
+                code: "Please renew your plan.",
+                subscriptionEndsAt: user.subscriptionEndsAt,
+              },
+              403,
+            ),
+          );
         }
       }
 
