@@ -67,7 +67,7 @@ const app = express();
 const port = Number(process.env.PORT) || 4000;
 const allowedOrigins = (process.env.FRONTEND_URL?.split(",") ?? [])
   .map((o) => o.trim().replace(/\/+$/, ""))
-  .concat("http://localhost:5173");
+  .concat("http://localhost:5173","https://dinevoro-frontend.vercel.app","https://hotel-management-six-lime.vercel.app");
 app.set("trust proxy", 1);
 app.use(
   cors({
